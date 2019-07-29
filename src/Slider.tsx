@@ -211,7 +211,7 @@ export const Slider: React.FC<SliderProps> = ({
       <View style={styles.absoluteFillCenter} pointerEvents="box-none">
         <Animated.View style={[maxTrackStyle, maxTrackAnimStyle]} />
       </View>
-      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
+      <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
         <PanGestureHandler
           maxPointers={1}
           minPointers={1}
@@ -246,11 +246,17 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
   },
+  absoluteFillCenterStart: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
   thumbBox: {
     margin: -hitSlop.horizontal,
     padding: hitSlop.horizontal,
     borderRadius: radius,
     left: -radius,
+    // width: diameter,
   },
   thumb: {
     width: diameter,
