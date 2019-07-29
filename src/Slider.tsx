@@ -69,6 +69,8 @@ interface SliderProps {
   minValue?: number
   onIndexChange?: (value: number) => void
   position?: Animated.Value<number>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ThumbComponent?: React.ComponentType<any>
   thumbStyle?: StyleProp<ViewStyle>
   value?: number
 }
@@ -82,6 +84,7 @@ export const Slider: React.FC<SliderProps> = ({
   maxTrackStyle = styles.maxTrack,
   minTrackStyle = styles.minTrack,
   thumbStyle = styles.thumb,
+  ThumbComponent = View,
 }) => {
   const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useMemo(() => {
     const translationX = new Value<number>(0)
@@ -143,7 +146,7 @@ export const Slider: React.FC<SliderProps> = ({
               set(prevIndex, index),
               call([index], ([currentIdx]) => onIndexChange(currentIdx)),
             ])
-          : undefined,
+          : 0,
         set(toValue, point),
       ]
     }
@@ -190,7 +193,8 @@ export const Slider: React.FC<SliderProps> = ({
           },
         },
       ]),
-      thumbAnimStyle: { transform: [{ translateX: pos }] },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      thumbAnimStyle: { transform: [{ translateX: pos as any }] },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       maxTrackAnimStyle: { width: pos as any },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
@@ -217,7 +221,7 @@ export const Slider: React.FC<SliderProps> = ({
           // hitSlop={hitSlop}
         >
           <Animated.View style={[styles.thumbBox, thumbAnimStyle]}>
-            <View style={thumbStyle} />
+            <ThumbComponent style={thumbStyle} />
           </Animated.View>
         </PanGestureHandler>
       </View>
