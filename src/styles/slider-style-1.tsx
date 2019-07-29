@@ -6,10 +6,13 @@ interface GenSliderStyles {
   color?: string
   maxTrackColor?: string
   minTrackColor?: string
+  thumbBorderWidth?: number
   thumbSize?: number
+  trackWidth?: number
 }
 // 1.5 / 18 => 6.66666666
 const borderWidthPerWidth = 1.5 / 18
+const trackWidthRatio = 6 / 18
 
 export function genSliderStyle1({
   thumbSize = 18,
@@ -17,9 +20,16 @@ export function genSliderStyle1({
   borderColor = colors.white,
   minTrackColor = colors.lightGray,
   maxTrackColor = colors.orange,
+  //
+  thumbBorderWidth,
+  trackWidth: _trackWidth,
 }: GenSliderStyles = {}) {
   const radius = thumbSize / 2
-  const borderWidth = thumbSize * borderWidthPerWidth
+  const borderWidth =
+    typeof thumbBorderWidth === 'number' ? thumbBorderWidth : thumbSize * borderWidthPerWidth
+  const trackWidth = _trackWidth || trackWidthRatio * thumbSize
+  const trackBorderRadius = trackWidth / 2
+
   const sliderStylesObject = {
     thumbStyle: {
       width: thumbSize,
@@ -32,13 +42,13 @@ export function genSliderStyle1({
     },
     minTrackStyle: {
       backgroundColor: minTrackColor,
-      height: 6,
-      borderRadius: 3,
+      height: trackWidth,
+      borderRadius: trackBorderRadius,
     },
     maxTrackStyle: {
       backgroundColor: maxTrackColor,
-      height: 6,
-      borderRadius: 3,
+      height: trackWidth,
+      borderRadius: trackBorderRadius,
     },
   }
 

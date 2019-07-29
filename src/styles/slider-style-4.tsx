@@ -1,4 +1,5 @@
-import { StyleSheet } from 'react-native'
+import React from 'react'
+import { StyleSheet, View, ViewProps } from 'react-native'
 import { colors } from './colors'
 
 interface GenSliderStyles {
@@ -6,22 +7,29 @@ interface GenSliderStyles {
   maxTrackColor?: string
   minTrackColor?: string
   thumbBorderColor?: string
+  thumbInnerSize?: number
   thumbSize?: number
   trackWidth?: number
 }
 
 const borderWidthPerWidth = 1 / 18
+const trackWidthRatio = 4 / 18
+const thumbInnerSizeRatio = 4 / 18
 
-export function genSliderStyle1({
+export function genSliderStyle4({
   thumbSize = 18,
   color: backgroundColor = colors.orange,
   thumbBorderColor = colors.white,
   minTrackColor = colors.lightGray,
   maxTrackColor = colors.orange,
-  trackWidth = 6,
+  thumbInnerSize: _thumbInnerSize,
+  trackWidth: _trackWidth,
 }: GenSliderStyles = {}) {
   const radius = thumbSize / 2
+  const thumbInnerSize = _thumbInnerSize || thumbInnerSizeRatio * thumbSize
+  const innerRadius = thumbInnerSize / 2
   const borderWidth = thumbSize * borderWidthPerWidth
+  const trackWidth = _trackWidth || trackWidthRatio * thumbSize
   const trackBorderRadius = trackWidth / 2
 
   const sliderStylesObject = {
@@ -32,6 +40,8 @@ export function genSliderStyle1({
       backgroundColor,
       borderColor: thumbBorderColor,
       borderWidth,
+      justifyContent: 'center' as 'center',
+      alignItems: 'center' as 'center',
     },
     minTrackStyle: {
       backgroundColor: minTrackColor,
@@ -43,8 +53,19 @@ export function genSliderStyle1({
       height: trackWidth,
       borderRadius: trackBorderRadius,
     },
+    thumbInner: {
+      backgroundColor: colors.white,
+      width: thumbInnerSize,
+      height: thumbInnerSize,
+      borderRadius: innerRadius,
+    },
   }
 
-  const sliderStyles = StyleSheet.create(sliderStylesObject)
-  return sliderStyles
+  const { thumbInner, ...sliderStyles } = StyleSheet.create(sliderStylesObject)
+  const ThumbComponent: React.FC<ViewProps> = (props) => (
+    <View {...props}>
+      <View style={thumbInner} />
+    </View>
+  )
+  return { ...sliderStyles, ThumbComponent }
 }
