@@ -67,5 +67,5 @@ export function genSliderStyle4({
       <View style={thumbInner} />
     </View>
   )
-  return { ...sliderStyles, ThumbComponent }
+  return { ...sliderStyles, ThumbComponent, thumbSize }
 }

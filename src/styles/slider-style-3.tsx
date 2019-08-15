@@ -46,5 +46,5 @@ export function genSliderStyle3({
   }
 
   const sliderStyles = StyleSheet.create(sliderStylesObject)
-  return sliderStyles
+  return { ...sliderStyles, thumbSize }
 }
