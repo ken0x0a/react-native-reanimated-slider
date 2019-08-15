@@ -71,6 +71,10 @@ export interface SliderProps
   springConfig?: RunSpringConfig
   step?: number
   ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /**
+   * Controls touchable area.
+   * bigger value & larger touch area
+   */
   touchSlop?: number
 }
 
@@ -102,7 +106,7 @@ export const Slider: React.FC<SliderProps> = ({
   maxTrackStyle = styles.maxTrack,
   minTrackStyle = styles.minTrack,
   thumbContainerStyle: thumbBoxStyle = styles.thumbBox,
-  thumbSize = 27,
+  thumbSize = DEFAULT_THUMB_SIZE,
   thumbStyle = styles.thumb,
   touchSlop = 10,
   width = DEFAULT_SLIDER_WIDTH,
@@ -111,11 +115,130 @@ export const Slider: React.FC<SliderProps> = ({
   activeOffsetX = [-5, 5],
   ...panGestureProps
 }) => {
-  const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
+  const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useGestureHandleAndAnimatedStyle(
+    {
+      initialValue,
+      maxValue,
+      minValue,
+      onIndexChange,
+      thumbSize,
+      position: posProps,
+      springConfig,
+      step,
+      touchSlop,
+      width,
+    },
+  )
 
-  const radius = thumbSize / 2
+  return (
+    <View style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}>
+      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
+        <View style={minTrackStyle} />
+      </View>
+      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
+        <Animated.View style={[maxTrackStyle, maxTrackAnimStyle]} />
+      </View>
+      <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
+        <PanGestureHandler
+          {...panGestureProps}
+          maxPointers={1}
+          minPointers={1}
+          activeOffsetX={activeOffsetX}
+          onHandlerStateChange={handleGestureEvent}
+          onGestureEvent={handleGestureEvent}
+          // hitSlop={hitSlop}
+        >
+          <Animated.View style={[thumbBoxStyle, thumbAnimStyle]}>
+            <ThumbComponent style={thumbStyle} />
+          </Animated.View>
+        </PanGestureHandler>
+      </View>
+    </View>
+  )
+}
 
-  const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useMemo(() => {
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+  },
+  absoluteFillCenter: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+  },
+  absoluteFillCenterStart: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  thumbBox: {},
+  thumb: {
+    width: DEFAULT_THUMB_SIZE,
+    height: DEFAULT_THUMB_SIZE,
+    borderRadius: DEFAULT_THUMB_SIZE / 2,
+    backgroundColor: colors.orange,
+    borderWidth: DEFAULT_THUMB_BORDER_WIDTH,
+    borderColor: colors.white,
+
+    ...Platform.select({
+      ios: {
+        shadowOpacity: 0.35,
+        shadowOffset: {
+          width: 0,
+          height: 0,
+        },
+        shadowColor: colors.shadow,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 7,
+      },
+    }),
+  },
+  minTrack: {
+    backgroundColor: colors.lightGray,
+    height: DEFAULT_MIN_TRACK_HEIGHT,
+    borderRadius: DEFAULT_MIN_TRACK_HEIGHT / 2,
+  },
+  maxTrack: {
+    backgroundColor: colors.orange,
+    height: DEFAULT_MAX_TRACK_HEIGHT,
+    borderRadius: DEFAULT_MAX_TRACK_HEIGHT / 2,
+  },
+})
+
+type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>
+
+function useGestureHandleAndAnimatedStyle({
+  initialValue,
+  maxValue,
+  minValue,
+  onIndexChange,
+  thumbSize,
+  position: posProps,
+  springConfig,
+  step,
+  touchSlop,
+  width,
+}: PartRequired<
+  Pick<
+    SliderProps,
+    | 'initialValue'
+    | 'maxValue'
+    | 'minValue'
+    | 'onIndexChange'
+    | 'thumbSize'
+    | 'position'
+    | 'springConfig'
+    | 'step'
+    | 'touchSlop'
+    | 'width'
+  >,
+  'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
+>) {
+  return useMemo(() => {
+    const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
+    const radius = thumbSize / 2
+
     const translationX = new Value<number>(0)
     const prevTranslationX = new Value<number>(0)
     const velocityX = new Value<number>(0)
@@ -244,94 +367,15 @@ export const Slider: React.FC<SliderProps> = ({
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     }
   }, [
-    initialPos,
+    initialValue,
     maxValue,
     minValue,
     onIndexChange,
     posProps,
-    radius,
     springConfig,
     step,
+    thumbSize,
     touchSlop,
     width,
   ])
-
-  return (
-    <View style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}>
-      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
-        <View style={minTrackStyle} />
-      </View>
-      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
-        <Animated.View style={[maxTrackStyle, maxTrackAnimStyle]} />
-      </View>
-      <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
-        <PanGestureHandler
-          {...panGestureProps}
-          maxPointers={1}
-          minPointers={1}
-          activeOffsetX={activeOffsetX}
-          onHandlerStateChange={handleGestureEvent}
-          onGestureEvent={handleGestureEvent}
-          // hitSlop={hitSlop}
-        >
-          <Animated.View style={[thumbBoxStyle, thumbAnimStyle]}>
-            <ThumbComponent style={thumbStyle} />
-          </Animated.View>
-        </PanGestureHandler>
-      </View>
-    </View>
-  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
-    // paddingHorizontal: padding,
-    justifyContent: 'center',
-    // flexDirection: 'row',
-    // alignItems: 'center',
-  },
-  absoluteFillCenter: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-  },
-  absoluteFillCenterStart: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  thumbBox: {},
-  thumb: {
-    width: DEFAULT_THUMB_SIZE,
-    height: DEFAULT_THUMB_SIZE,
-    borderRadius: DEFAULT_THUMB_SIZE / 2,
-    backgroundColor: colors.orange,
-    borderWidth: DEFAULT_THUMB_BORDER_WIDTH,
-    borderColor: colors.white,
-
-    ...Platform.select({
-      ios: {
-        shadowOpacity: 0.35,
-        shadowOffset: {
-          width: 0,
-          height: 0,
-        },
-        shadowColor: colors.shadow,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 7,
-      },
-    }),
-  },
-  minTrack: {
-    backgroundColor: colors.lightGray,
-    height: DEFAULT_MIN_TRACK_HEIGHT,
-    borderRadius: DEFAULT_MIN_TRACK_HEIGHT / 2,
-  },
-  maxTrack: {
-    backgroundColor: colors.orange,
-    height: DEFAULT_MAX_TRACK_HEIGHT,
-    borderRadius: DEFAULT_MAX_TRACK_HEIGHT / 2,
-  },
-})
