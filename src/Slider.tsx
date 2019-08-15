@@ -78,22 +78,6 @@ export interface SliderProps
   touchSlop?: number
 }
 
-function getInitialPosition(
-  value: number,
-  minValue: number,
-  maxValue: number,
-  width: number,
-): number {
-  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width
-
-  /**
-   * - development mode: throw error
-   * - production mode:  return `0`
-   */
-  if (__DEV__) throw new Error('props.value @ Slider must be between `minValue` and `maxValue')
-  return 0
-}
-
 export const Slider: React.FC<SliderProps> = ({
   initialValue,
   minValue = 0,
@@ -207,6 +191,23 @@ const styles = StyleSheet.create({
 })
 
 type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>
+interface UseGestureHandleAndAnimatedStyleArgs
+  extends PartRequired<
+    Pick<
+      SliderProps,
+      | 'initialValue'
+      | 'maxValue'
+      | 'minValue'
+      | 'onIndexChange'
+      | 'thumbSize'
+      | 'position'
+      | 'springConfig'
+      | 'step'
+      | 'touchSlop'
+      | 'width'
+    >,
+    'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
+  > {}
 
 function useGestureHandleAndAnimatedStyle({
   initialValue,
@@ -219,22 +220,7 @@ function useGestureHandleAndAnimatedStyle({
   step,
   touchSlop,
   width,
-}: PartRequired<
-  Pick<
-    SliderProps,
-    | 'initialValue'
-    | 'maxValue'
-    | 'minValue'
-    | 'onIndexChange'
-    | 'thumbSize'
-    | 'position'
-    | 'springConfig'
-    | 'step'
-    | 'touchSlop'
-    | 'width'
-  >,
-  'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
->) {
+}: UseGestureHandleAndAnimatedStyleArgs) {
   return useMemo(() => {
     const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
     const radius = thumbSize / 2
@@ -251,79 +237,20 @@ function useGestureHandleAndAnimatedStyle({
 
     /**
      * snap
-     */
-    if (__DEV__ && step && (maxValue - minValue) % step !== 0)
-      throw new Error(
-        '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
-      )
-
-    const numberOfPoints = step ? (maxValue - minValue) / step : 5
-    const width_d0 = width / (numberOfPoints - 1)
-    const points = Array(numberOfPoints)
-      .fill(0)
-      .map((_, i) => i * width_d0)
-
-    const toValue = new Value<number>(0)
-    const point = new Value<number>(0)
-    /**
-     * onChange `index`, `prevIndex`
-     */
-    const index = new Value<number>(0)
-    const prevIndex = new Value<number>(0)
-
-    function setSnapPoints(estimate: Animated.Node<number>) {
-      const diff = new Value<number>(0)
-
-      return [
-        set(diff, abs(sub(points[0] - 1, estimate))),
-        ...points.map((pt, i) => {
-          const newDiff = abs(sub(pt, estimate))
-          return cond(lessThan(newDiff, diff), [
-            // call([newDiff, diff], ([nd, d]) => {
-            //   console.debug({ nd, d, i, pt })
-            // }),
-            set(diff, newDiff),
-            set(point, pt),
-            set(index, i),
-          ])
-        }),
-      ]
-    }
-    function selectSnapPoint() {
-      const estimate = new Value<number>(0)
-      return [
-        /**
-         * velocityX * 0.01
-         */
-        set(estimate, add(position, multiply(velocityX, 0.01))),
-        ...setSnapPoints(estimate),
-        // debug('velocityX', velocityX),
-        // debug('estimate', estimate),
-        // debug('point', point),
-        onIndexChange
-          ? cond(neq(prevIndex, index), [
-              set(prevIndex, index),
-              call([index], ([currentIdx]) => onIndexChange(currentIdx)),
-            ])
-          : 0,
-        set(toValue, point),
-      ]
-    }
-
-    /**
      * no `step`, no snap
      */
-    const snapBehavior = step
-      ? [
-          cond(clockRunning(clock), 0, selectSnapPoint()),
-          runSpring(clock, position, toValue, springConfig, {
-            finished: new Value(0),
-            velocity: velocityX,
-            position,
-            time: new Value(0),
-          }),
-        ]
-      : []
+    const snapBehavior = getSnapBehavior({
+      step,
+      onIndexChange,
+      width,
+      maxValue,
+      minValue,
+      clock,
+      position,
+      springConfig,
+      velocityX,
+    })
+
     const translateX = block([
       cond(eq(state, GestureState.END), [
         // cond(clockRunning(clock), 0, startClock(clock)),
@@ -378,4 +305,153 @@ function useGestureHandleAndAnimatedStyle({
     touchSlop,
     width,
   ])
+}
+
+function getInitialPosition(
+  value: number,
+  minValue: number,
+  maxValue: number,
+  width: number,
+): number {
+  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width
+
+  /**
+   * - development mode: throw error
+   * - production mode:  return `0`
+   */
+  if (__DEV__) throw new Error('props.value @ Slider must be between `minValue` and `maxValue')
+  return 0
+}
+
+/**
+ * no `step`, no snap
+ */
+function getSnapBehavior({
+  step,
+  onIndexChange,
+  width,
+  maxValue,
+  minValue,
+  springConfig,
+  position,
+  clock,
+  velocityX,
+}: Pick<
+  UseGestureHandleAndAnimatedStyleArgs,
+  'step' | 'onIndexChange' | 'width' | 'maxValue' | 'minValue' | 'springConfig'
+> & {
+  clock: Animated.Clock
+  position: Animated.Value<number>
+  velocityX: Animated.Value<number>
+}): Animated.Node<number>[] {
+  if (!step)
+    return onIndexChange
+      ? [
+          call([position], ([currentPos]) =>
+            onIndexChange((currentPos * (maxValue - minValue)) / width + minValue),
+          ),
+        ]
+      : []
+  if (__DEV__ && (maxValue - minValue) % step !== 0)
+    throw new Error(
+      '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
+    )
+
+  const numberOfPoints = step ? (maxValue - minValue) / step : 5
+  const width_d0 = width / numberOfPoints
+  const points = Array(numberOfPoints + 1)
+    .fill(0)
+    .map((_, i) => i * width_d0)
+
+  const toValue = new Value<number>(0)
+  const point = new Value<number>(0)
+  /**
+   * onChange `index`, `prevIndex`
+   */
+  const index = new Value<number>(0)
+  const prevIndex = new Value<number>(0)
+
+  return [
+    cond(
+      clockRunning(clock),
+      0,
+      selectSnapPoint({
+        onIndexChange,
+        position,
+        velocityX,
+        prevIndex,
+        index,
+        toValue,
+        point,
+        points,
+      }),
+    ),
+    runSpring(clock, position, toValue, springConfig, {
+      finished: new Value(0),
+      velocity: velocityX,
+      position,
+      time: new Value(0),
+    }),
+  ]
+}
+
+function selectSnapPoint({
+  onIndexChange,
+  position,
+  velocityX,
+  prevIndex,
+  index,
+  toValue,
+  point,
+  points,
+}: Pick<UseGestureHandleAndAnimatedStyleArgs, 'onIndexChange'> & {
+  index: Animated.Value<number>
+  point: Animated.Value<number>
+  points: number[]
+  position: Animated.Value<number>
+  prevIndex: Animated.Value<number>
+  toValue: Animated.Value<number>
+  velocityX: Animated.Value<number>
+}) {
+  const estimate = new Value<number>(0)
+  return [
+    /**
+     * velocityX * 0.01
+     */
+    set(estimate, add(position, multiply(velocityX, 0.01))),
+    ...setSnapPoints(estimate, points, point, index),
+    // debug('velocityX', velocityX),
+    // debug('estimate', estimate),
+    // debug('point', point),
+    onIndexChange
+      ? cond(neq(prevIndex, index), [
+          set(prevIndex, index),
+          call([index], ([currentIdx]) => onIndexChange(currentIdx)),
+        ])
+      : 0,
+    set(toValue, point),
+  ]
+}
+function setSnapPoints(
+  estimate: Animated.Node<number>,
+  points: number[],
+  point: Animated.Value<number>,
+  index: Animated.Value<number>,
+) {
+  const diff = new Value<number>(0)
+
+  return [
+    set(diff, abs(sub(points[0] - 1, estimate))),
+    ...points.map((pt, i) => {
+      const newDiff = abs(sub(pt, estimate))
+      return cond(lessThan(newDiff, diff), [
+        // call([newDiff, diff], ([nd, d]) => {
+        //   console.debug({ nd, d, i, pt })
+        // }),
+        set(diff, newDiff),
+        set(point, pt),
+        set(index, i),
+      ])
+    }),
+  ]
 }
