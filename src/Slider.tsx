@@ -1,91 +1,104 @@
 /* eslint-disable react-native/no-color-literals */
 import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
-import { PanGestureHandler, State as GestureState } from 'react-native-gesture-handler'
+import { Dimensions, Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import {
+  PanGestureHandler,
+  PanGestureHandlerProperties,
+  State as GestureState,
+} from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
-import { runSpring } from './utils/spring'
+import { colors } from './styles/colors'
+import { runSpring, RunSpringConfig } from './utils/spring'
 
 const {
   interpolate,
   add,
   cond,
-  onChange,
-  // diff,
-  debug,
   neq,
   divide,
   eq,
   event,
-  exp,
-  and,
   call,
   block,
   multiply,
-  pow,
   set,
   abs,
   clockRunning,
-  greaterThan,
-  greaterOrEq,
   lessThan,
-  lessOrEq,
-  sqrt,
-  startClock,
   stopClock,
   sub,
   Clock,
   Value,
   Extrapolate,
-  diffClamp,
-  tan,
-  sin,
-  spring,
-  timing,
-  decay,
-  defined,
 } = Animated
-const sq = (x: Animated.Adaptable<number>): Animated.Node<number> => multiply(x, x)
 
-const thumbSize = 36
-const padding = 20
+const DEFAULT_THUMB_SIZE = 27
+const DEFAULT_THUMB_BORDER_WIDTH = 2.25
+const DEFAULT_MAX_TRACK_HEIGHT = 9
+const DEFAULT_MIN_TRACK_HEIGHT = 9
+
 const windowWidth = Dimensions.get('window').width
-const width = windowWidth - padding * 2
-const radius = 18
-const diameter = radius * 2
-const activeOffsetX = [-10, 10]
-const hitSlop = {
-  // top: 30,
-  // bottom: 30,
-  // right: 30,
-  // left: 30,
-  // vertical: 100,
-  horizontal: 5,
-}
+const DEFAULT_SLIDER_HORIZONTAL_MARGIN = 20
+const DEFAULT_SLIDER_WIDTH = windowWidth - DEFAULT_SLIDER_HORIZONTAL_MARGIN * 2
 
-interface SliderProps {
+interface SliderStyleProps {
   maxTrackStyle?: StyleProp<ViewStyle>
-  maxValue?: number
   minTrackStyle?: StyleProp<ViewStyle>
+  thumbContainerStyle?: StyleProp<ViewStyle>
+  thumbSize?: number
+  thumbStyle?: StyleProp<ViewStyle>
+  /** width of the Slider */
+  width?: number
+}
+export interface SliderProps
+  extends SliderStyleProps,
+    Omit<
+      PanGestureHandlerProperties,
+      | 'maxPointers'
+      | 'minPointers'
+      | 'onHandlerStateChange'
+      | 'onGestureEvent'
+      | 'activeOffsetY'
+      | 'failOffsetY'
+      | 'maxDeltaY'
+      | 'minDeltaY'
+      | 'minOffsetY'
+      | 'minVelocityY'
+    > {
+  maxValue?: number
   minValue?: number
   onIndexChange?: (value: number) => void
   position?: Animated.Value<number>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ThumbComponent?: React.ComponentType<any>
-  thumbStyle?: StyleProp<ViewStyle>
+  springConfig?: RunSpringConfig
+  step?: number
+  ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  touchSlop?: number
   value?: number
 }
 
 export const Slider: React.FC<SliderProps> = ({
   value,
-  minValue,
-  maxValue,
+  minValue = 0,
+  maxValue = 10,
+  step,
   onIndexChange,
   position: posProps,
+  ThumbComponent = View,
+  // Styles
   maxTrackStyle = styles.maxTrack,
   minTrackStyle = styles.minTrack,
+  thumbContainerStyle: thumbBoxStyle = styles.thumbBox,
+  thumbSize = 27,
   thumbStyle = styles.thumb,
-  ThumbComponent = View,
+  touchSlop = 10,
+  width = DEFAULT_SLIDER_WIDTH,
+  //
+  springConfig,
+  activeOffsetX = [-5, 5],
+  // ...panGestureProps
 }) => {
+  const radius = thumbSize / 2
+
   const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useMemo(() => {
     const translationX = new Value<number>(0)
     const prevTranslationX = new Value<number>(0)
@@ -100,11 +113,11 @@ export const Slider: React.FC<SliderProps> = ({
     /**
      * snap
      */
+    // const numberOfPoints = (maxValue - minValue) / step
     const width_d4 = width / 4
     const points = Array(5)
       .fill(0)
       .map((_, i) => i * width_d4)
-    console.debug({ points })
 
     const toValue = new Value<number>(0)
     const point = new Value<number>(0)
@@ -122,9 +135,9 @@ export const Slider: React.FC<SliderProps> = ({
         ...points.map((pt, i) => {
           const newDiff = abs(sub(pt, estimate))
           return cond(lessThan(newDiff, diff), [
-            call([newDiff, diff], ([nd, d]) => {
-              console.debug({ nd, d, i, pt })
-            }),
+            // call([newDiff, diff], ([nd, d]) => {
+            //   console.debug({ nd, d, i, pt })
+            // }),
             set(diff, newDiff),
             set(point, pt),
             set(index, i),
@@ -135,12 +148,14 @@ export const Slider: React.FC<SliderProps> = ({
     function selectSnapPoint() {
       const estimate = new Value<number>(0)
       return [
-        set(estimate, add(position, multiply(divide(velocityX, 2), 0.02))),
+        /**
+         * velocityX * 0.01
+         */
+        set(estimate, add(position, multiply(velocityX, 0.01))),
         ...setSnapPoints(estimate),
         // debug('velocityX', velocityX),
         // debug('estimate', estimate),
         // debug('point', point),
-        // ...points.reduce((pv, cpt) => cond(lessThan * abs(sub(cpt, estimate)), pv[0]), [10000, 0]),
         onIndexChange
           ? cond(neq(prevIndex, index), [
               set(prevIndex, index),
@@ -153,7 +168,7 @@ export const Slider: React.FC<SliderProps> = ({
 
     const snapBehavior = [
       cond(clockRunning(clock), 0, selectSnapPoint()),
-      runSpring(clock, position, toValue, undefined, {
+      runSpring(clock, position, toValue, springConfig, {
         finished: new Value(0),
         velocity: velocityX,
         position,
@@ -193,18 +208,19 @@ export const Slider: React.FC<SliderProps> = ({
           },
         },
       ]),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      thumbAnimStyle: { transform: [{ translateX: pos as any }] },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      maxTrackAnimStyle: { width: pos as any },
+      thumbAnimStyle: {
+        transform: [{ translateX: pos }],
+        ...(touchSlop && { margin: -touchSlop, padding: touchSlop }),
+        borderRadius: radius,
+        left: -radius,
+      },
+      maxTrackAnimStyle: { width: pos },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     }
-  }, [onIndexChange, posProps])
+  }, [onIndexChange, posProps, radius, springConfig, touchSlop, width])
 
   return (
-    <View
-      style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}
-    >
+    <View style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}>
       <View style={styles.absoluteFillCenter} pointerEvents="box-none">
         <View style={minTrackStyle} />
       </View>
@@ -213,6 +229,7 @@ export const Slider: React.FC<SliderProps> = ({
       </View>
       <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
         <PanGestureHandler
+          // {...panGestureProps}
           maxPointers={1}
           minPointers={1}
           activeOffsetX={activeOffsetX}
@@ -220,7 +237,7 @@ export const Slider: React.FC<SliderProps> = ({
           onGestureEvent={handleGestureEvent}
           // hitSlop={hitSlop}
         >
-          <Animated.View style={[styles.thumbBox, thumbAnimStyle]}>
+          <Animated.View style={[thumbBoxStyle, thumbAnimStyle]}>
             <ThumbComponent style={thumbStyle} />
           </Animated.View>
         </PanGestureHandler>
@@ -229,11 +246,6 @@ export const Slider: React.FC<SliderProps> = ({
   )
 }
 
-const colors = {
-  orange: '#FF653A',
-  orangeLight: '#FFC3B2',
-  lightGray: '#F1F1F1',
-}
 const styles = StyleSheet.create({
   container: {
     // flex: 1,
@@ -251,20 +263,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
-  thumbBox: {
-    margin: -hitSlop.horizontal,
-    padding: hitSlop.horizontal,
-    borderRadius: radius,
-    left: -radius,
-    // width: diameter,
-  },
+  thumbBox: {},
   thumb: {
-    width: diameter,
-    height: diameter,
-    borderRadius: radius,
+    width: DEFAULT_THUMB_SIZE,
+    height: DEFAULT_THUMB_SIZE,
+    borderRadius: DEFAULT_THUMB_SIZE / 2,
     backgroundColor: colors.orange,
-    // left: -radius,
-    borderWidth: 1.5,
+    borderWidth: DEFAULT_THUMB_BORDER_WIDTH,
     borderColor: '#FFF',
 
     ...Platform.select({
@@ -275,7 +280,7 @@ const styles = StyleSheet.create({
           height: 0,
         },
         shadowColor: '#7c7c7c80',
-        shadowRadius: 4,
+        shadowRadius: 6,
       },
       android: {
         elevation: 7,
@@ -284,12 +289,12 @@ const styles = StyleSheet.create({
   },
   minTrack: {
     backgroundColor: colors.lightGray,
-    height: 6,
-    borderRadius: 3,
+    height: DEFAULT_MIN_TRACK_HEIGHT,
+    borderRadius: DEFAULT_MIN_TRACK_HEIGHT / 2,
   },
   maxTrack: {
     backgroundColor: colors.orange,
-    height: 6,
-    borderRadius: 3,
+    height: DEFAULT_MAX_TRACK_HEIGHT,
+    borderRadius: DEFAULT_MAX_TRACK_HEIGHT / 2,
   },
 })
