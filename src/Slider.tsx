@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-color-literals */
 import React, { useMemo } from 'react'
 import { Dimensions, Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import {
@@ -308,7 +307,7 @@ const styles = StyleSheet.create({
     borderRadius: DEFAULT_THUMB_SIZE / 2,
     backgroundColor: colors.orange,
     borderWidth: DEFAULT_THUMB_BORDER_WIDTH,
-    borderColor: '#FFF',
+    borderColor: colors.white,
 
     ...Platform.select({
       ios: {
@@ -317,7 +316,7 @@ const styles = StyleSheet.create({
           width: 0,
           height: 0,
         },
-        shadowColor: '#7c7c7c80',
+        shadowColor: colors.shadow,
         shadowRadius: 6,
       },
       android: {
