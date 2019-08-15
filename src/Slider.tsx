@@ -15,7 +15,6 @@ const {
   add,
   cond,
   neq,
-  divide,
   eq,
   event,
   call,
@@ -65,6 +64,7 @@ export interface SliderProps
       | 'minOffsetY'
       | 'minVelocityY'
     > {
+  initialValue?: number
   maxValue?: number
   minValue?: number
   onIndexChange?: (value: number) => void
@@ -73,11 +73,26 @@ export interface SliderProps
   step?: number
   ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
   touchSlop?: number
-  value?: number
+}
+
+function getInitialPosition(
+  value: number,
+  minValue: number,
+  maxValue: number,
+  width: number,
+): number {
+  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width
+
+  /**
+   * - development mode: throw error
+   * - production mode:  return `0`
+   */
+  if (__DEV__) throw new Error('props.value @ Slider must be between `minValue` and `maxValue')
+  return 0
 }
 
 export const Slider: React.FC<SliderProps> = ({
-  value,
+  initialValue,
   minValue = 0,
   maxValue = 10,
   step,
@@ -95,15 +110,17 @@ export const Slider: React.FC<SliderProps> = ({
   //
   springConfig,
   activeOffsetX = [-5, 5],
-  // ...panGestureProps
+  ...panGestureProps
 }) => {
+  const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
+
   const radius = thumbSize / 2
 
   const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useMemo(() => {
     const translationX = new Value<number>(0)
     const prevTranslationX = new Value<number>(0)
     const velocityX = new Value<number>(0)
-    const position = posProps || new Value<number>(radius)
+    const position = posProps || new Value<number>(initialPos)
     const state = new Value<GestureState>(GestureState.UNDETERMINED)
 
     const clock = new Clock()
@@ -113,11 +130,16 @@ export const Slider: React.FC<SliderProps> = ({
     /**
      * snap
      */
-    // const numberOfPoints = (maxValue - minValue) / step
-    const width_d4 = width / 4
-    const points = Array(5)
+    if (__DEV__ && step && (maxValue - minValue) % step !== 0)
+      throw new Error(
+        '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
+      )
+
+    const numberOfPoints = step ? (maxValue - minValue) / step : 5
+    const width_d0 = width / (numberOfPoints - 1)
+    const points = Array(numberOfPoints)
       .fill(0)
-      .map((_, i) => i * width_d4)
+      .map((_, i) => i * width_d0)
 
     const toValue = new Value<number>(0)
     const point = new Value<number>(0)
@@ -166,15 +188,20 @@ export const Slider: React.FC<SliderProps> = ({
       ]
     }
 
-    const snapBehavior = [
-      cond(clockRunning(clock), 0, selectSnapPoint()),
-      runSpring(clock, position, toValue, springConfig, {
-        finished: new Value(0),
-        velocity: velocityX,
-        position,
-        time: new Value(0),
-      }),
-    ]
+    /**
+     * no `step`, no snap
+     */
+    const snapBehavior = step
+      ? [
+          cond(clockRunning(clock), 0, selectSnapPoint()),
+          runSpring(clock, position, toValue, springConfig, {
+            finished: new Value(0),
+            velocity: velocityX,
+            position,
+            time: new Value(0),
+          }),
+        ]
+      : []
     const translateX = block([
       cond(eq(state, GestureState.END), [
         // cond(clockRunning(clock), 0, startClock(clock)),
@@ -217,7 +244,18 @@ export const Slider: React.FC<SliderProps> = ({
       maxTrackAnimStyle: { width: pos },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     }
-  }, [onIndexChange, posProps, radius, springConfig, touchSlop, width])
+  }, [
+    initialPos,
+    maxValue,
+    minValue,
+    onIndexChange,
+    posProps,
+    radius,
+    springConfig,
+    step,
+    touchSlop,
+    width,
+  ])
 
   return (
     <View style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}>
@@ -229,7 +267,7 @@ export const Slider: React.FC<SliderProps> = ({
       </View>
       <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
         <PanGestureHandler
-          // {...panGestureProps}
+          {...panGestureProps}
           maxPointers={1}
           minPointers={1}
           activeOffsetX={activeOffsetX}
