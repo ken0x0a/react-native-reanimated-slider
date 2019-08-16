@@ -221,17 +221,19 @@ function getBehaviors({
   const interval = (step * width) / (maxValue - minValue)
   const interval_d2 = interval / 2
 
-  const crossThresholdBehavior = [
-    points.reduce<Animated.Node<number>>(
-      (pv, cv, i) =>
-        cond(
-          greaterThan(position, cv - interval_d2),
-          cond(neq(prevIndex, i), set(prevIndex, i)),
-          pv,
+  const crossThresholdBehavior = onIndexChange
+    ? [
+        points.reduce<Animated.Node<number>>(
+          (pv, cv, i) =>
+            cond(
+              greaterThan(position, cv - interval_d2),
+              cond(neq(prevIndex, i), set(prevIndex, i)),
+              pv,
+            ),
+          (0 as unknown) as Animated.Node<number>,
         ),
-      (0 as unknown) as Animated.Node<number>,
-    ),
-  ]
+      ]
+    : []
 
   const toValue = new Value<number>(0)
   const point = new Value<number>(0)
@@ -251,6 +253,7 @@ function getBehaviors({
           toValue,
           point,
           points,
+          interval_d2,
         }),
       ),
       runSpring(clock, position, toValue, springConfig, {
@@ -272,8 +275,10 @@ function selectSnapPoint({
   toValue,
   point,
   points,
+  interval_d2,
 }: Pick<UseGestureHandleAndAnimatedStyleArgs, 'onIndexChange'> & {
   index: Animated.Value<number>
+  interval_d2: number
   point: Animated.Value<number>
   points: number[]
   position: Animated.Value<number>
@@ -287,39 +292,67 @@ function selectSnapPoint({
      * velocityX * 0.01
      */
     set(estimate, add(position, multiply(velocityX, 0.01))),
-    ...setSnapPoints(estimate, points, point, index),
+    points.reduce<Animated.Node<number>>(
+      (pv, cv, i) =>
+        pv
+          ? cond(
+              greaterThan(estimate, cv - interval_d2),
+              [onIndexChange ? cond(neq(prevIndex, i), set(prevIndex, i)) : 0, set(toValue, cv)],
+              pv,
+            )
+          : /**
+             * special case for `i === 0`,
+             * as value of `estimate` might be under `points[0] - interval_d2`.
+             */
+            block([
+              onIndexChange ? cond(neq(prevIndex, i), set(prevIndex, i)) : 0,
+              set(toValue, cv),
+            ]),
+      (0 as unknown) as Animated.Node<number>,
+    ),
+    // ...setSnapPoints(estimate, points, toValue, prevIndex, interval_d2),
     // debug('velocityX', velocityX),
     // debug('estimate', estimate),
     // debug('point', point),
-    onIndexChange
-      ? cond(neq(prevIndex, index), [
-          set(prevIndex, index),
-          // call([index], ([currentIdx]) => onIndexChange(currentIdx)),
-        ])
-      : 0,
-    set(toValue, point),
+    // onIndexChange
+    //   ? cond(neq(prevIndex, index), [
+    //       set(prevIndex, index),
+    //       // call([index], ([currentIdx]) => onIndexChange(currentIdx)),
+    //     ])
+    //   : 0,
+    // set(toValue, point),
   ]
 }
 function setSnapPoints(
   estimate: Animated.Node<number>,
   points: number[],
-  point: Animated.Value<number>,
-  index: Animated.Value<number>,
+  toValue: Animated.Value<number>,
+  prevIndex: Animated.Value<number>,
+  interval_d2: number,
 ) {
   const diff = new Value<number>(0)
 
   return [
-    set(diff, abs(sub(points[0] - 1, estimate))),
-    ...points.map((pt, i) => {
-      const newDiff = abs(sub(pt, estimate))
-      return cond(lessThan(newDiff, diff), [
-        // call([newDiff, diff], ([nd, d]) => {
-        //   console.debug({ nd, d, i, pt })
-        // }),
-        set(diff, newDiff),
-        set(point, pt),
-        set(index, i),
-      ])
-    }),
+    points.reduce<Animated.Node<number>>(
+      (pv, cv, i) =>
+        cond(
+          greaterThan(estimate, cv - interval_d2),
+          [cond(neq(prevIndex, i), set(prevIndex, i)), set(toValue, cv)],
+          pv,
+        ),
+      (0 as unknown) as Animated.Node<number>,
+    ),
+    // set(diff, abs(sub(points[0] - 1, estimate))),
+    // ...points.map((pt, i) => {
+    //   const newDiff = abs(sub(pt, estimate))
+    //   return cond(lessThan(newDiff, diff), [
+    //     // call([newDiff, diff], ([nd, d]) => {
+    //     //   console.debug({ nd, d, i, pt })
+    //     // }),
+    //     set(diff, newDiff),
+    //     set(point, pt),
+    //     set(index, i),
+    //   ])
+    // }),
   ]
 }
