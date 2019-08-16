@@ -6,14 +6,27 @@
 # https://hub.docker.com/r/circleci/node
 # https://circleci.com/docs/2.0/caching/#yarn-node
 # 
+# 
+# To validate this config, run the following command.
+# 
+# - `circleci config validate`
+# 
+
 
 version: 2 # use CircleCI 2.0
+
+attach_workspace_step_alias: &attach_workspace_step_alias
+  - attach_workspace:
+      at: ~/workdir
+defaults: &defaults
+  working_directory: ~/workdir # directory where steps will run
+  docker: # run the steps with Docker
+    - image: circleci/node:12.8.0 # ...with this image as the primary container; this is where all `steps` will run
+
 jobs: # a collection of steps
-  build: # runs not using Workflows must have a `build` job as entry point
-    working_directory: ~/wdir # directory where steps will run
-    docker: # run the steps with Docker
-      - image: circleci/node:12.6.0 # ...with this image as the primary container; this is where all `steps` will run
-    steps: # a collection of executable commands
+  install-dependencies:
+    <<: *defaults
+    steps:
       # Check out source code to working directory
       - checkout
 
@@ -37,7 +50,15 @@ jobs: # a collection of steps
           key: yarn-packages-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+      - persist_to_workspace:
+          root: .
+          paths: 
+            - .
 
+  typecheck:
+    <<: *defaults
+    steps:
+      - <<: *attach_workspace_step_alias
       # 
       # Type Check
       # 
@@ -55,6 +76,10 @@ jobs: # a collection of steps
           paths:
             - ./build
 
+  lint:
+    <<: *defaults
+    steps:
+      - <<: *attach_workspace_step_alias
       # 
       # Lint
       # 
@@ -72,6 +97,11 @@ jobs: # a collection of steps
           key: eslint-{{ .Branch }}-{{ checksum ".eslintcache" }}
           paths:
             - .eslintcache
+
+  release: # runs not using Workflows must have a `build` job as entry point
+    <<: *defaults
+    steps: # a collection of executable commands
+      - <<: *attach_workspace_step_alias
 
       # 
       # ======  Release  ======
@@ -102,3 +132,23 @@ jobs: # a collection of steps
       # - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
       #     path: test-results.xml
       # See https://circleci.com/docs/2.0/deployment-integrations/ for deploy examples
+
+# https://circleci.com/docs/2.0/workflows/#branch-level-job-execution
+workflows:
+  version: 2
+  build-test-release:
+    jobs:
+      - install-dependencies
+      - typecheck:
+          requires:
+            - install-dependencies
+      - lint:
+          requires:
+            - install-dependencies
+      - release:
+          filters:  # using regex filters requires the entire branch to match
+            branches:
+              only: master
+          requires:
+            - typecheck
+            - lint

@@ -14,8 +14,8 @@ const { cond, block, set, clockRunning, startClock, stopClock, Value, spring } =
 export function runSpring(
   clock: Animated.Clock,
   value: Animated.Adaptable<number>,
-  dest: Animated.Adaptable<number>,
-  config: RunSpringConfig = getDefaultConfig(),
+  toValue: Animated.Adaptable<number>,
+  baseConfig: SpringBaseConfig = defaultConfig,
   state: Animated.SpringState = {
     finished: new Value(0),
     velocity: new Value(0),
@@ -23,30 +23,20 @@ export function runSpring(
     time: new Value(0),
   },
 ) {
-  const reset = [
-    //
-    set(state.finished, 0),
-    set(state.time, 0),
-    set(state.position, value),
-  ]
+  /** create new object, to avoid accidental reuse. */
+  const config: Animated.SpringConfig = { ...baseConfig, toValue }
+  const reset = [set(state.finished, 0), set(state.time, 0), set(state.position, value)]
 
   return block([
-    cond(clockRunning(clock), 0, [
-      // set(state.velocity, 0),
-      ...reset,
-      set(config.toValue, dest),
-      startClock(clock),
-    ]),
+    cond(clockRunning(clock), 0, [...reset, startClock(clock)]),
     spring(clock, state, config),
     cond(state.finished, stopClock(clock)),
     state.position,
   ])
 }
 
-export interface RunSpringConfig extends Animated.SpringConfig {
-  toValue: Animated.Value<number>
-}
-export const getDefaultConfig = (): RunSpringConfig => ({
+export interface SpringBaseConfig extends Omit<Animated.SpringConfig, 'toValue'> {}
+export const defaultConfig: SpringBaseConfig = {
   /**
    * https://github.com/kmagiera/react-native-reanimated/#springutilsmakedefaultconfig
    * ```
@@ -66,5 +56,4 @@ export const getDefaultConfig = (): RunSpringConfig => ({
   overshootClamping: false,
   restSpeedThreshold: 0.001,
   restDisplacementThreshold: 0.001,
-  toValue: new Value(0),
-})
+}
