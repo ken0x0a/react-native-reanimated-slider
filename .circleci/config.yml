@@ -24,7 +24,7 @@ defaults: &defaults
     - image: circleci/node:12.8.0 # ...with this image as the primary container; this is where all `steps` will run
 
 jobs: # a collection of steps
-  install_dependencies:
+  install-dependencies:
     <<: *defaults
     steps:
       # Check out source code to working directory
@@ -138,13 +138,13 @@ workflows:
   version: 2
   build-test-release:
     jobs:
-      - install_dependencies
+      - install-dependencies
       - typecheck:
           requires:
-            - install_dependencies
+            - install-dependencies
       - lint:
           requires:
-            - install_dependencies
+            - install-dependencies
       - release:
           filters:  # using regex filters requires the entire branch to match
             branches:
