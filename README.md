@@ -22,13 +22,17 @@ yarn add react-native-reanimated-slider
 
 ### 1. `<Slider />`
 
-Slider component
+Slider component.
 
 ```tsx
 import { Slider, genSliderStyle1, genSliderStyle2 } from 'react-native-reanimated-slider'
 
 <Slider {...sliderStyles.genSliderStyle1({ thumbSize: 27, thumbBorderWidth: 0 })} />
 <Slider {...sliderStyles.genSliderStyle2()} />
+
+// NOTE: Slider is just FunctionalComponent, doesn't wrapped by React.memo
+const SliderMemo = React.memo(Slider, (prevProps, nextProps) => true)
+<SliderMemo {...sliderStyles.genSliderStyle2()} />
 // ...
 ```
 
