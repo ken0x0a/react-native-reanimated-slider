@@ -5,19 +5,21 @@ import { SliderProps } from '../types'
 import { runSpring } from './spring'
 
 const {
-  interpolate,
+  abs,
   add,
+  block,
+  call,
   cond,
-  neq,
   eq,
   event,
-  call,
-  block,
+  neq,
+  interpolate,
   multiply,
   set,
-  abs,
   clockRunning,
+  onChange,
   lessThan,
+  greaterThan,
   stopClock,
   sub,
   Clock,
@@ -71,6 +73,34 @@ export function useGestureHandleAndAnimatedStyle({
     // const edgeBehavior = [cond(lessOrEq(position, width), abs(position), sub(width * 2, position))]
 
     /**
+     * onChange `index`, `prevIndex`
+     */
+    const index = new Value<number>(0)
+    const prevIndex = new Value<number>(0)
+
+    const numberOfPoints = step ? (maxValue - minValue) / step : 5
+    const width_d0 = width / numberOfPoints
+    const points = Array(numberOfPoints + 1)
+      .fill(0)
+      .map((_, i) => i * width_d0)
+    const interval = step ? (step * width) / (maxValue - minValue) : 0
+    const interval_d2 = interval / 2
+
+    const crossThresholdBehavior = step
+      ? [
+          points.reduce<Animated.Node<number> | number>(
+            (pv, cv, i) =>
+              cond(
+                greaterThan(position, cv - interval_d2),
+                cond(neq(prevIndex, i), set(prevIndex, i)),
+                pv,
+              ),
+            0,
+          ),
+        ]
+      : []
+
+    /**
      * snap
      * no `step`, no snap
      */
@@ -84,6 +114,9 @@ export function useGestureHandleAndAnimatedStyle({
       position,
       springConfig,
       velocityX,
+      index,
+      prevIndex,
+      points,
     })
 
     const translateX = block([
@@ -94,9 +127,13 @@ export function useGestureHandleAndAnimatedStyle({
       cond(eq(state, GestureState.BEGAN), [set(prevTranslationX, 0)]),
       cond(eq(state, GestureState.ACTIVE), [
         cond(clockRunning(clock), stopClock(clock)),
+        ...crossThresholdBehavior,
         set(position, add(position, sub(translationX, prevTranslationX))),
         set(prevTranslationX, translationX),
       ]),
+      ...(step && onIndexChange
+        ? [onChange(prevIndex, call([prevIndex], ([currentIdx]) => onIndexChange(currentIdx)))]
+        : []),
       // cond(greaterOrEq(position, 0), position, multiply(position, -1)),
       // ...edgeBehavior,
       position,
@@ -171,12 +208,18 @@ function getSnapBehavior({
   position,
   clock,
   velocityX,
+  index,
+  prevIndex,
+  points,
 }: Pick<
   UseGestureHandleAndAnimatedStyleArgs,
   'step' | 'onIndexChange' | 'width' | 'maxValue' | 'minValue' | 'springConfig'
 > & {
   clock: Animated.Clock
+  index: Animated.Value<number>
+  points: number[]
   position: Animated.Value<number>
+  prevIndex: Animated.Value<number>
   velocityX: Animated.Value<number>
 }): Animated.Node<number>[] {
   if (!step)
@@ -192,19 +235,8 @@ function getSnapBehavior({
       '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
     )
 
-  const numberOfPoints = step ? (maxValue - minValue) / step : 5
-  const width_d0 = width / numberOfPoints
-  const points = Array(numberOfPoints + 1)
-    .fill(0)
-    .map((_, i) => i * width_d0)
-
   const toValue = new Value<number>(0)
   const point = new Value<number>(0)
-  /**
-   * onChange `index`, `prevIndex`
-   */
-  const index = new Value<number>(0)
-  const prevIndex = new Value<number>(0)
 
   return [
     cond(
@@ -261,7 +293,7 @@ function selectSnapPoint({
     onIndexChange
       ? cond(neq(prevIndex, index), [
           set(prevIndex, index),
-          call([index], ([currentIdx]) => onIndexChange(currentIdx)),
+          // call([index], ([currentIdx]) => onIndexChange(currentIdx)),
         ])
       : 0,
     set(toValue, point),
