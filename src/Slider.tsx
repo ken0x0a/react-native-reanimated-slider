@@ -1,34 +1,10 @@
-import React, { useMemo } from 'react'
-import { Dimensions, Platform, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
-import {
-  PanGestureHandler,
-  PanGestureHandlerProperties,
-  State as GestureState,
-} from 'react-native-gesture-handler'
+import React from 'react'
+import { Dimensions, Platform, StyleSheet, View } from 'react-native'
+import { PanGestureHandler } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
 import { colors } from './styles/colors'
-import { runSpring, RunSpringConfig } from './utils/spring'
-
-const {
-  interpolate,
-  add,
-  cond,
-  neq,
-  eq,
-  event,
-  call,
-  block,
-  multiply,
-  set,
-  abs,
-  clockRunning,
-  lessThan,
-  stopClock,
-  sub,
-  Clock,
-  Value,
-  Extrapolate,
-} = Animated
+import { SliderProps } from './types'
+import { useGestureHandleAndAnimatedStyle } from './utils/slider-animation'
 
 const DEFAULT_THUMB_SIZE = 27
 const DEFAULT_THUMB_BORDER_WIDTH = 2.25
@@ -38,45 +14,6 @@ const DEFAULT_MIN_TRACK_HEIGHT = 9
 const windowWidth = Dimensions.get('window').width
 const DEFAULT_SLIDER_HORIZONTAL_MARGIN = 20
 const DEFAULT_SLIDER_WIDTH = windowWidth - DEFAULT_SLIDER_HORIZONTAL_MARGIN * 2
-
-interface SliderStyleProps {
-  maxTrackStyle?: StyleProp<ViewStyle>
-  minTrackStyle?: StyleProp<ViewStyle>
-  thumbContainerStyle?: StyleProp<ViewStyle>
-  thumbSize?: number
-  thumbStyle?: StyleProp<ViewStyle>
-  /** width of the Slider */
-  width?: number
-}
-export interface SliderProps
-  extends SliderStyleProps,
-    Omit<
-      PanGestureHandlerProperties,
-      | 'maxPointers'
-      | 'minPointers'
-      | 'onHandlerStateChange'
-      | 'onGestureEvent'
-      | 'activeOffsetY'
-      | 'failOffsetY'
-      | 'maxDeltaY'
-      | 'minDeltaY'
-      | 'minOffsetY'
-      | 'minVelocityY'
-    > {
-  initialValue?: number
-  maxValue?: number
-  minValue?: number
-  onIndexChange?: (value: number) => void
-  position?: Animated.Value<number>
-  springConfig?: RunSpringConfig
-  step?: number
-  ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
-  /**
-   * Controls touchable area.
-   * bigger value & larger touch area
-   */
-  touchSlop?: number
-}
 
 export const Slider: React.FC<SliderProps> = ({
   initialValue,
@@ -96,6 +33,7 @@ export const Slider: React.FC<SliderProps> = ({
   width = DEFAULT_SLIDER_WIDTH,
   //
   springConfig,
+  panRef,
   activeOffsetX = [-5, 5],
   ...panGestureProps
 }) => {
@@ -125,6 +63,7 @@ export const Slider: React.FC<SliderProps> = ({
       <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
         <PanGestureHandler
           {...panGestureProps}
+          ref={panRef}
           maxPointers={1}
           minPointers={1}
           activeOffsetX={activeOffsetX}
@@ -189,269 +128,3 @@ const styles = StyleSheet.create({
     borderRadius: DEFAULT_MAX_TRACK_HEIGHT / 2,
   },
 })
-
-type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>
-interface UseGestureHandleAndAnimatedStyleArgs
-  extends PartRequired<
-    Pick<
-      SliderProps,
-      | 'initialValue'
-      | 'maxValue'
-      | 'minValue'
-      | 'onIndexChange'
-      | 'thumbSize'
-      | 'position'
-      | 'springConfig'
-      | 'step'
-      | 'touchSlop'
-      | 'width'
-    >,
-    'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
-  > {}
-
-function useGestureHandleAndAnimatedStyle({
-  initialValue,
-  maxValue,
-  minValue,
-  onIndexChange,
-  thumbSize,
-  position: posProps,
-  springConfig,
-  step,
-  touchSlop,
-  width,
-}: UseGestureHandleAndAnimatedStyleArgs) {
-  return useMemo(() => {
-    const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
-    const radius = thumbSize / 2
-
-    const translationX = new Value<number>(0)
-    const prevTranslationX = new Value<number>(0)
-    const velocityX = new Value<number>(0)
-    const position = posProps || new Value<number>(initialPos)
-    const state = new Value<GestureState>(GestureState.UNDETERMINED)
-
-    const clock = new Clock()
-
-    // const edgeBehavior = [cond(lessOrEq(position, width), abs(position), sub(width * 2, position))]
-
-    /**
-     * snap
-     * no `step`, no snap
-     */
-    const snapBehavior = getSnapBehavior({
-      step,
-      onIndexChange,
-      width,
-      maxValue,
-      minValue,
-      clock,
-      position,
-      springConfig,
-      velocityX,
-    })
-
-    const translateX = block([
-      cond(eq(state, GestureState.END), [
-        // cond(clockRunning(clock), 0, startClock(clock)),
-        ...snapBehavior,
-      ]),
-      cond(eq(state, GestureState.BEGAN), [set(prevTranslationX, 0)]),
-      cond(eq(state, GestureState.ACTIVE), [
-        cond(clockRunning(clock), stopClock(clock)),
-        set(position, add(position, sub(translationX, prevTranslationX))),
-        set(prevTranslationX, translationX),
-      ]),
-      // cond(greaterOrEq(position, 0), position, multiply(position, -1)),
-      // ...edgeBehavior,
-      position,
-    ])
-    const pos = interpolate(translateX, {
-      inputRange: [0, width],
-      outputRange: [0, width],
-      extrapolate: Extrapolate.CLAMP,
-    })
-    return {
-      translationX,
-      state,
-      handleGestureEvent: event([
-        {
-          nativeEvent: {
-            translationX,
-            velocityX,
-            // x,
-            state,
-          },
-        },
-      ]),
-      thumbAnimStyle: {
-        transform: [{ translateX: pos }],
-        ...(touchSlop && { margin: -touchSlop, padding: touchSlop }),
-        borderRadius: radius,
-        left: -radius,
-      },
-      maxTrackAnimStyle: { width: pos },
-      // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
-    }
-  }, [
-    initialValue,
-    maxValue,
-    minValue,
-    onIndexChange,
-    posProps,
-    springConfig,
-    step,
-    thumbSize,
-    touchSlop,
-    width,
-  ])
-}
-
-function getInitialPosition(
-  value: number,
-  minValue: number,
-  maxValue: number,
-  width: number,
-): number {
-  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width
-
-  /**
-   * - development mode: throw error
-   * - production mode:  return `0`
-   */
-  if (__DEV__) throw new Error('props.value @ Slider must be between `minValue` and `maxValue')
-  return 0
-}
-
-/**
- * no `step`, no snap
- */
-function getSnapBehavior({
-  step,
-  onIndexChange,
-  width,
-  maxValue,
-  minValue,
-  springConfig,
-  position,
-  clock,
-  velocityX,
-}: Pick<
-  UseGestureHandleAndAnimatedStyleArgs,
-  'step' | 'onIndexChange' | 'width' | 'maxValue' | 'minValue' | 'springConfig'
-> & {
-  clock: Animated.Clock
-  position: Animated.Value<number>
-  velocityX: Animated.Value<number>
-}): Animated.Node<number>[] {
-  if (!step)
-    return onIndexChange
-      ? [
-          call([position], ([currentPos]) =>
-            onIndexChange((currentPos * (maxValue - minValue)) / width + minValue),
-          ),
-        ]
-      : []
-  if (__DEV__ && (maxValue - minValue) % step !== 0)
-    throw new Error(
-      '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
-    )
-
-  const numberOfPoints = step ? (maxValue - minValue) / step : 5
-  const width_d0 = width / numberOfPoints
-  const points = Array(numberOfPoints + 1)
-    .fill(0)
-    .map((_, i) => i * width_d0)
-
-  const toValue = new Value<number>(0)
-  const point = new Value<number>(0)
-  /**
-   * onChange `index`, `prevIndex`
-   */
-  const index = new Value<number>(0)
-  const prevIndex = new Value<number>(0)
-
-  return [
-    cond(
-      clockRunning(clock),
-      0,
-      selectSnapPoint({
-        onIndexChange,
-        position,
-        velocityX,
-        prevIndex,
-        index,
-        toValue,
-        point,
-        points,
-      }),
-    ),
-    runSpring(clock, position, toValue, springConfig, {
-      finished: new Value(0),
-      velocity: velocityX,
-      position,
-      time: new Value(0),
-    }),
-  ]
-}
-
-function selectSnapPoint({
-  onIndexChange,
-  position,
-  velocityX,
-  prevIndex,
-  index,
-  toValue,
-  point,
-  points,
-}: Pick<UseGestureHandleAndAnimatedStyleArgs, 'onIndexChange'> & {
-  index: Animated.Value<number>
-  point: Animated.Value<number>
-  points: number[]
-  position: Animated.Value<number>
-  prevIndex: Animated.Value<number>
-  toValue: Animated.Value<number>
-  velocityX: Animated.Value<number>
-}) {
-  const estimate = new Value<number>(0)
-  return [
-    /**
-     * velocityX * 0.01
-     */
-    set(estimate, add(position, multiply(velocityX, 0.01))),
-    ...setSnapPoints(estimate, points, point, index),
-    // debug('velocityX', velocityX),
-    // debug('estimate', estimate),
-    // debug('point', point),
-    onIndexChange
-      ? cond(neq(prevIndex, index), [
-          set(prevIndex, index),
-          call([index], ([currentIdx]) => onIndexChange(currentIdx)),
-        ])
-      : 0,
-    set(toValue, point),
-  ]
-}
-function setSnapPoints(
-  estimate: Animated.Node<number>,
-  points: number[],
-  point: Animated.Value<number>,
-  index: Animated.Value<number>,
-) {
-  const diff = new Value<number>(0)
-
-  return [
-    set(diff, abs(sub(points[0] - 1, estimate))),
-    ...points.map((pt, i) => {
-      const newDiff = abs(sub(pt, estimate))
-      return cond(lessThan(newDiff, diff), [
-        // call([newDiff, diff], ([nd, d]) => {
-        //   console.debug({ nd, d, i, pt })
-        // }),
-        set(diff, newDiff),
-        set(point, pt),
-        set(index, i),
-      ])
-    }),
-  ]
-}
