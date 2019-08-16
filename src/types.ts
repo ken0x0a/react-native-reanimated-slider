@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleProp, ViewStyle } from 'react-native'
 import { PanGestureHandler, PanGestureHandlerProperties } from 'react-native-gesture-handler'
 import Animated from 'react-native-reanimated'
-import { RunSpringConfig } from './utils/spring'
+import { SpringBaseConfig } from './utils/spring'
 
 interface SliderStyleProps {
   maxTrackStyle?: StyleProp<ViewStyle>
@@ -34,7 +34,7 @@ export interface SliderProps
   onIndexChange?: (value: number) => void
   panRef?: React.RefObject<PanGestureHandler>
   position?: Animated.Value<number>
-  springConfig?: RunSpringConfig
+  springConfig?: SpringBaseConfig
   step?: number
   ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
   /**
