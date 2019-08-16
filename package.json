@@ -25,7 +25,9 @@
     "test": "yarn run type-check && yarn run lint",
     "prepare": "bob build",
     "tsw": "tsc --noEmit --watch",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "commit": "git-cz",
+    "changelog": "conventional-changelog -p angular"
   },
   "peerDependencies": {
     "react": "*",
@@ -35,7 +37,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@ken0x0a/configs": "2.5.2",
+    "@ken0x0a/configs": "2.5.3",
     "@ken0x0a/eslint-config-react-deps": "6.1.2",
     "@react-native-community/bob": "0.6.1",
     "@types/react": "16.8.23",
@@ -55,5 +57,17 @@
       "module",
       "typescript"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@ken0x0a/commit-config",
+      "maxHeaderWidth": 100,
+      "maxLineWidth": 100,
+      "defaultType": "chore",
+      "defaultScope": "",
+      "defaultSubject": "--",
+      "defaultBody": "",
+      "defaultIssues": ""
+    }
   }
 }
