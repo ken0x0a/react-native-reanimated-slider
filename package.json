@@ -1,5 +1,5 @@
 {
-  "name": "react-native-reanimated-slider",
+  "name": "react-native-re-slider",
   "version": "0.0.0-development",
   "description": "Slider component for react-native using reanimated",
   "main": "lib/commonjs/index.js",
