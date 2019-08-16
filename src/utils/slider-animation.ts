@@ -78,33 +78,11 @@ export function useGestureHandleAndAnimatedStyle({
     const index = new Value<number>(0)
     const prevIndex = new Value<number>(0)
 
-    const numberOfPoints = step ? (maxValue - minValue) / step : 5
-    const width_d0 = width / numberOfPoints
-    const points = Array(numberOfPoints + 1)
-      .fill(0)
-      .map((_, i) => i * width_d0)
-    const interval = step ? (step * width) / (maxValue - minValue) : 0
-    const interval_d2 = interval / 2
-
-    const crossThresholdBehavior = step
-      ? [
-          points.reduce<Animated.Node<number> | number>(
-            (pv, cv, i) =>
-              cond(
-                greaterThan(position, cv - interval_d2),
-                cond(neq(prevIndex, i), set(prevIndex, i)),
-                pv,
-              ),
-            0,
-          ),
-        ]
-      : []
-
     /**
      * snap
      * no `step`, no snap
      */
-    const snapBehavior = getSnapBehavior({
+    const { snapBehavior, crossThresholdBehavior } = getBehaviors({
       step,
       onIndexChange,
       width,
@@ -116,7 +94,6 @@ export function useGestureHandleAndAnimatedStyle({
       velocityX,
       index,
       prevIndex,
-      points,
     })
 
     const translateX = block([
@@ -198,7 +175,7 @@ function getInitialPosition(
 /**
  * no `step`, no snap
  */
-function getSnapBehavior({
+function getBehaviors({
   step,
   onIndexChange,
   width,
@@ -210,56 +187,80 @@ function getSnapBehavior({
   velocityX,
   index,
   prevIndex,
-  points,
 }: Pick<
   UseGestureHandleAndAnimatedStyleArgs,
   'step' | 'onIndexChange' | 'width' | 'maxValue' | 'minValue' | 'springConfig'
 > & {
   clock: Animated.Clock
   index: Animated.Value<number>
-  points: number[]
   position: Animated.Value<number>
   prevIndex: Animated.Value<number>
   velocityX: Animated.Value<number>
-}): Animated.Node<number>[] {
+}): { crossThresholdBehavior: Animated.Node<number>[]; snapBehavior: Animated.Node<number>[] } {
   if (!step)
-    return onIndexChange
-      ? [
-          call([position], ([currentPos]) =>
-            onIndexChange((currentPos * (maxValue - minValue)) / width + minValue),
-          ),
-        ]
-      : []
+    return {
+      snapBehavior: onIndexChange
+        ? [
+            call([position], ([currentPos]) =>
+              onIndexChange((currentPos * (maxValue - minValue)) / width + minValue),
+            ),
+          ]
+        : [],
+      crossThresholdBehavior: [],
+    }
   if (__DEV__ && (maxValue - minValue) % step !== 0)
     throw new Error(
       '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
     )
 
+  const numberOfPoints = (maxValue - minValue) / step
+  const width_d0 = width / numberOfPoints
+  const points = Array(numberOfPoints + 1)
+    .fill(0)
+    .map((_, i) => i * width_d0)
+  const interval = (step * width) / (maxValue - minValue)
+  const interval_d2 = interval / 2
+
+  const crossThresholdBehavior = [
+    points.reduce<Animated.Node<number>>(
+      (pv, cv, i) =>
+        cond(
+          greaterThan(position, cv - interval_d2),
+          cond(neq(prevIndex, i), set(prevIndex, i)),
+          pv,
+        ),
+      (0 as unknown) as Animated.Node<number>,
+    ),
+  ]
+
   const toValue = new Value<number>(0)
   const point = new Value<number>(0)
 
-  return [
-    cond(
-      clockRunning(clock),
-      0,
-      selectSnapPoint({
-        onIndexChange,
+  return {
+    crossThresholdBehavior,
+    snapBehavior: [
+      cond(
+        clockRunning(clock),
+        0,
+        selectSnapPoint({
+          onIndexChange,
+          position,
+          velocityX,
+          prevIndex,
+          index,
+          toValue,
+          point,
+          points,
+        }),
+      ),
+      runSpring(clock, position, toValue, springConfig, {
+        finished: new Value(0),
+        velocity: velocityX,
         position,
-        velocityX,
-        prevIndex,
-        index,
-        toValue,
-        point,
-        points,
+        time: new Value(0),
       }),
-    ),
-    runSpring(clock, position, toValue, springConfig, {
-      finished: new Value(0),
-      velocity: velocityX,
-      position,
-      time: new Value(0),
-    }),
-  ]
+    ],
+  }
 }
 
 function selectSnapPoint({
