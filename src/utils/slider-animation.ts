@@ -5,7 +5,6 @@ import { SliderProps } from '../types'
 import { runSpring } from './spring'
 
 const {
-  abs,
   add,
   block,
   call,
@@ -18,7 +17,6 @@ const {
   set,
   clockRunning,
   onChange,
-  lessThan,
   greaterThan,
   stopClock,
   sub,

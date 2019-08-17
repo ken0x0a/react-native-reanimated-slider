@@ -1,8 +1,4 @@
 {
   "extends": "@ken0x0a/tsconfig/bob",
-  "compilerOptions": {
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
-  },
   "include": ["src"]
 }
