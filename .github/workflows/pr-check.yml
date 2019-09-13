@@ -1,46 +1,43 @@
 name: PR check!
-
-on:
-  # Sequence of patterns matched against refs/heads
+'on':
   push:
-    branches:    
-      - '*'         # Push events on master branch
-      - '!master'         # Push events on master branch
-
-constants:
-  job-config: &job-config
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [12.x]
-  steps:
-    yarn-install: &yarn-install
-      - name: install dependencies
-        run: |
-          yarn install --frozen-lockfile 
-
-    checkout-n-yarn-install: &checkout-n-yarn-install
-      - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - *yarn-install
-
+    branches:
+      - '*'
+      - '!master'
 jobs:
   typecheck:
     name: Type check
-    <<: *job-config
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version:
+          - 12.x
     steps:
-      - *checkout-n-yarn-install
+      - uses: actions/checkout@v1
+      - name: 'Use Node.js ${{ matrix.node-version }}'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '${{ matrix.node-version }}'
+      - name: install dependencies
+        run: |
+          yarn install --frozen-lockfile
       - name: type check
         run: yarn run type-check-ci
-
   lint:
     name: Lint
-    <<: *job-config
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version:
+          - 12.x
     steps:
-      - *checkout-n-yarn-install
+      - uses: actions/checkout@v1
+      - name: 'Use Node.js ${{ matrix.node-version }}'
+        uses: actions/setup-node@v1
+        with:
+          node-version: '${{ matrix.node-version }}'
+      - name: install dependencies
+        run: |
+          yarn install --frozen-lockfile
       - name: lint
         run: yarn run lint
-
