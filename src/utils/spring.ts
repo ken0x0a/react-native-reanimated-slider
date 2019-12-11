@@ -22,7 +22,7 @@ export function runSpring(
     position: new Value(0),
     time: new Value(0),
   },
-) {
+): Animated.Node<number> {
   /** create new object, to avoid accidental reuse. */
   const config: Animated.SpringConfig = { ...baseConfig, toValue }
   const reset = [set(state.finished, 0), set(state.time, 0), set(state.position, value)]
