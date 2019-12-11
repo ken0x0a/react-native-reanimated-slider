@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native'
+import { SliderStyleProps } from '../types'
 import { colors } from './colors'
 
 interface GenSliderStyles {
@@ -23,7 +24,7 @@ export function genSliderStyle1({
   //
   thumbBorderWidth,
   trackWidth: _trackWidth,
-}: GenSliderStyles = {}) {
+}: GenSliderStyles = {}): SliderStyleProps {
   const radius = thumbSize / 2
   const borderWidth =
     typeof thumbBorderWidth === 'number' ? thumbBorderWidth : thumbSize * borderWidthPerWidth

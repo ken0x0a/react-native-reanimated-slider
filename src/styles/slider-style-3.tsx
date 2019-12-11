@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native'
+import { SliderStyleProps } from '../types'
 import { colors } from './colors'
 
 interface GenSliderStyles {
@@ -18,7 +19,7 @@ export function genSliderStyle3({
   minTrackColor = colors.orange,
   maxTrackColor = colors.orangeLight,
   manTrackBorderColor = colors.orange,
-}: GenSliderStyles = {}) {
+}: GenSliderStyles = {}): SliderStyleProps {
   const radius = thumbSize / 2
   const borderWidth = thumbSize * borderWidthPerWidth
   const sliderStylesObject = {

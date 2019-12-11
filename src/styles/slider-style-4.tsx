@@ -1,5 +1,6 @@
 import React from 'react'
 import { StyleSheet, View, ViewProps } from 'react-native'
+import { SliderProps } from '../types'
 import { colors } from './colors'
 
 interface GenSliderStyles {
@@ -24,7 +25,7 @@ export function genSliderStyle4({
   maxTrackColor = colors.orange,
   thumbInnerSize: _thumbInnerSize,
   trackWidth: _trackWidth,
-}: GenSliderStyles = {}) {
+}: GenSliderStyles = {}): SliderProps {
   const radius = thumbSize / 2
   const thumbInnerSize = _thumbInnerSize || thumbInnerSizeRatio * thumbSize
   const innerRadius = thumbInnerSize / 2
