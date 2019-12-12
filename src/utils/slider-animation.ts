@@ -44,6 +44,7 @@ interface UseGestureHandleAndAnimatedStyleArgs
     'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
   > {}
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useGestureHandleAndAnimatedStyle({
   initialValue,
   maxValue,
@@ -100,7 +101,12 @@ export function useGestureHandleAndAnimatedStyle({
         set(prevTranslationX, translationX),
       ]),
       ...(step && onIndexChange
-        ? [onChange(index, call([index], ([currentIdx]) => onIndexChange(currentIdx)))]
+        ? [
+            onChange(
+              index,
+              call([index], ([currentIdx]) => onIndexChange(currentIdx)),
+            ),
+          ]
         : []),
       position,
     ])
@@ -261,7 +267,7 @@ function selectSnapPoint({
   position: Animated.Value<number>
   toValue: Animated.Value<number>
   velocityX: Animated.Value<number>
-}) {
+}): Animated.Node<number>[] {
   const estimate = new Value<number>(0)
   return [
     /**
@@ -270,7 +276,7 @@ function selectSnapPoint({
     set(estimate, add(position, multiply(velocityX, 0.01))),
     points.reduce<Animated.Node<number>>(
       (pv, cv, i) =>
-        pv
+        ((pv as unknown) as 0 | Animated.Node<number>)
           ? cond(
               greaterThan(estimate, cv - interval_d2),
               [onIndexChange ? cond(neq(index, i), set(index, i)) : 0, set(toValue, cv)],

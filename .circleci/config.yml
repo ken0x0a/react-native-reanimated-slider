@@ -16,8 +16,8 @@
 version: 2 # use CircleCI 2.0
 
 attach_workspace_step_alias: &attach_workspace_step_alias
-  - attach_workspace:
-      at: ~/workdir
+  attach_workspace:
+    at: ~/workdir
 defaults: &defaults
   working_directory: ~/workdir # directory where steps will run
   docker: # run the steps with Docker
@@ -58,28 +58,28 @@ jobs: # a collection of steps
   typecheck:
     <<: *defaults
     steps:
-      - <<: *attach_workspace_step_alias
+      - *attach_workspace_step_alias
       # 
       # Type Check
       # 
       - restore_cache:
           # name: Restore Yarn Package Cache
           keys:
-            - eslint-{{ .Branch }}
-            - eslint-
+            - tsc-{{ .Branch }}
+            - tsc-
       - run: # type check
           name: type check
           command: yarn run type-check-ci
       - save_cache:
-          # name: Save ESlint Cache
-          key: eslint-{{ .Branch }}
+          # name: Save tsc Cache
+          key: tsc-{{ .Branch }}
           paths:
             - ./build
 
   lint:
     <<: *defaults
     steps:
-      - <<: *attach_workspace_step_alias
+      - *attach_workspace_step_alias
       # 
       # Lint
       # 
@@ -101,7 +101,7 @@ jobs: # a collection of steps
   release: # runs not using Workflows must have a `build` job as entry point
     <<: *defaults
     steps: # a collection of executable commands
-      - <<: *attach_workspace_step_alias
+      - *attach_workspace_step_alias
 
       # 
       # ======  Release  ======
@@ -112,10 +112,7 @@ jobs: # a collection of steps
       # "semantic-release": "if [ \"${CIRCLE_BRANCH}\" == \"master\" ]; then yarn semantic-release; fi"
       - run:
           name: release
-          command: |
-            if [ "$CIRCLE_BRANCH" = "master" ]; then
-              yarn run semantic-release || true
-            fi
+          command: yarn run semantic-release || true
       # - run: # run tests
       #     name: test
       #     command: yarn test

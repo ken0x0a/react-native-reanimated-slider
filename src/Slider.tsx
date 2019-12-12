@@ -57,10 +57,10 @@ export const Slider: React.FC<SliderProps> = ({
       <View style={styles.absoluteFillCenter} pointerEvents="box-none">
         <View style={minTrackStyle} />
       </View>
-      <View style={styles.absoluteFillCenter} pointerEvents="box-none">
+      <View style={styles.absoluteFillCenterStart} pointerEvents="box-none">
         <Animated.View style={[maxTrackStyle, maxTrackAnimStyle]} />
       </View>
-      <View style={[styles.absoluteFillCenterStart]} pointerEvents="box-none">
+      <View style={styles.absoluteFillCenterStart} pointerEvents="box-none">
         <PanGestureHandler
           {...panGestureProps}
           ref={panRef}

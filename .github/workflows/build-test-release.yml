@@ -1,0 +1,72 @@
+name: Lerna publish!
+
+on:
+  # Sequence of patterns matched against refs/heads
+  push:
+    branches:    
+      - master         # Push events on master branch
+    paths:
+      - 'configs/**/*'        # match this pattern
+      - '!*.md'               # but not match this
+      - '!**/__fixtures__/**' # and not match this
+      - '!**/__tests__/**'    # and not match this
+      - '.github/workflows/*.yml' # or match this pattern
+
+constants:
+  release-job-node-version: &release-job-node-version 12.10
+  job-config: &job-config
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+  steps:
+    yarn-install: &yarn-install
+      - name: install dependencies
+        run: |
+          yarn install --frozen-lockfile 
+
+    checkout-n-yarn-install: &checkout-n-yarn-install
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - *yarn-install
+
+jobs:
+  typecheck:
+    name: Type check
+    <<: *job-config
+    steps:
+      - *checkout-n-yarn-install
+      - name: type check
+        run: yarn run type-check-ci
+
+  lint:
+    name: Lint
+    <<: *job-config
+    steps:
+      - *checkout-n-yarn-install
+      - name: lint
+        run: yarn run lint
+
+  # https://github.com/semantic-release/npm/blob/1f3ab84a5d05947960be9a7c78642e13fb516496/lib/set-npmrc-auth.js
+  release:
+    name: Release
+    needs:
+      - typecheck
+      - lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: *release-job-node-version
+      - *yarn-install
+      - name: Release (semantic release)
+        run: yarn --silent run semantic-release || true
+        env: # https://help.github.com/en/articles/workflow-syntax-for-github-actions#jobsjob_idstepsenv
+          NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
