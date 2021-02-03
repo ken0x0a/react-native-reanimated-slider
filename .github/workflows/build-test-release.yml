@@ -1,4 +1,4 @@
-name: Lerna publish!
+name: Publish!
 
 on:
   # Sequence of patterns matched against refs/heads
