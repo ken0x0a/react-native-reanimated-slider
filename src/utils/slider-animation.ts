@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { State as GestureState } from "react-native-gesture-handler";
+import type Animated from "react-native-reanimated";
 import {
   add,
   block,
@@ -20,8 +21,7 @@ import {
   Value,
   Extrapolate,
 } from "react-native-reanimated";
-import type Animated from "react-native-reanimated";
-import { SliderProps } from "../types";
+import type { SliderProps } from "../types";
 import { runSpring } from "./spring";
 
 type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>;
@@ -43,7 +43,6 @@ interface UseGestureHandleAndAnimatedStyleArgs
     "maxValue" | "minValue" | "thumbSize" | "touchSlop" | "width"
   > {}
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useGestureHandleAndAnimatedStyle({
   initialValue,
   maxValue,
@@ -206,14 +205,14 @@ function getBehaviors({
   const interval = (step * width) / (maxValue - minValue);
   const interval_d2 = interval / 2;
 
-  const crossThresholdBehavior = onIndexChange
+  const crossThresholdBehavior: Animated.Node<number>[] = onIndexChange
     ? [
         points.reduce<Animated.Node<number>>(
           (pv, cv, i) => cond(greaterThan(position, cv - interval_d2), cond(neq(index, i), set(index, i)), pv),
-          0 as unknown as Animated.Node<number>,
+          new Value<number>(0), // 0 as Animated.Adaptable<number>,
         ),
       ]
-    : [];
+    : ([] as Animated.Node<number>[]);
 
   const toValue = new Value<number>(0);
 
@@ -278,7 +277,7 @@ function selectSnapPoint({
              * as value of `estimate` might be under `points[0] - interval_d2`.
              */
             block([onIndexChange ? cond(neq(index, i), set(index, i)) : 0, set(toValue, cv)]),
-      0 as unknown as Animated.Node<number>,
+      new Value<number>(0),
     ),
     // debug('velocityX', velocityX),
     // debug('estimate', estimate),

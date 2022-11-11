@@ -1,18 +1,18 @@
-import { Platform, StyleSheet } from 'react-native'
-import { SliderProps } from '../types'
-import { colors } from './colors'
+import { Platform, StyleSheet } from "react-native";
+import type { SliderProps } from "../types";
+import { colors } from "./colors";
 
 interface GenSliderStyles {
-  color?: string
-  maxTrackColor?: string
-  minTrackBorderColor?: string
-  minTrackColor?: string
-  thumbBorderColor?: string
-  thumbSize?: number
-  trackWidth?: number
+  color?: string;
+  maxTrackColor?: string;
+  minTrackBorderColor?: string;
+  minTrackColor?: string;
+  thumbBorderColor?: string;
+  thumbSize?: number;
+  trackWidth?: number;
 }
-const borderWidthPerWidth = 1 / 18
-const trackWidthRatio = 6 / 18
+const borderWidthPerWidth = 1 / 18;
+const trackWidthRatio = 6 / 18;
 
 export function genSliderStyle2({
   thumbSize = 18,
@@ -23,10 +23,10 @@ export function genSliderStyle2({
   maxTrackColor = colors.orange,
   trackWidth: _trackWidth,
 }: GenSliderStyles = {}): SliderProps {
-  const radius = thumbSize / 2
-  const borderWidth = thumbSize * borderWidthPerWidth
-  const trackWidth = _trackWidth || trackWidthRatio * thumbSize
-  const trackBorderRadius = trackWidth / 2
+  const radius = thumbSize / 2;
+  const borderWidth = thumbSize * borderWidthPerWidth;
+  const trackWidth = _trackWidth || trackWidthRatio * thumbSize;
+  const trackBorderRadius = trackWidth / 2;
 
   const sliderStylesObject = {
     thumbStyle: {
@@ -45,7 +45,7 @@ export function genSliderStyle2({
             width: 0,
             height: 0,
           },
-          shadowColor: '#7c7c7c',
+          shadowColor: "#7c7c7c",
           shadowRadius: 4,
         },
         android: {
@@ -65,8 +65,8 @@ export function genSliderStyle2({
       height: trackWidth,
       borderRadius: trackBorderRadius,
     },
-  }
+  };
 
-  const sliderStyles = StyleSheet.create(sliderStylesObject)
-  return { ...sliderStyles, touchSlop: 25, thumbSize }
+  const sliderStyles = StyleSheet.create(sliderStylesObject);
+  return { ...sliderStyles, touchSlop: 25, thumbSize };
 }
