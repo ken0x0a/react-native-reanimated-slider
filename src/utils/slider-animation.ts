@@ -1,10 +1,7 @@
-import { useMemo } from 'react'
-import { State as GestureState } from 'react-native-gesture-handler'
-import Animated from 'react-native-reanimated'
-import { SliderProps } from '../types'
-import { runSpring } from './spring'
-
-const {
+import { useMemo } from "react";
+import { State as GestureState } from "react-native-gesture-handler";
+import type Animated from "react-native-reanimated";
+import {
   add,
   block,
   call,
@@ -12,7 +9,7 @@ const {
   eq,
   event,
   neq,
-  interpolate,
+  interpolateNode as interpolate,
   multiply,
   set,
   clockRunning,
@@ -23,28 +20,29 @@ const {
   Clock,
   Value,
   Extrapolate,
-} = Animated
+} from "react-native-reanimated";
+import type { SliderProps } from "../types";
+import { runSpring } from "./spring";
 
-type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>
+type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>;
 interface UseGestureHandleAndAnimatedStyleArgs
   extends PartRequired<
     Pick<
       SliderProps,
-      | 'initialValue'
-      | 'maxValue'
-      | 'minValue'
-      | 'onIndexChange'
-      | 'thumbSize'
-      | 'position'
-      | 'springConfig'
-      | 'step'
-      | 'touchSlop'
-      | 'width'
+      | "initialValue"
+      | "maxValue"
+      | "minValue"
+      | "onIndexChange"
+      | "thumbSize"
+      | "position"
+      | "springConfig"
+      | "step"
+      | "touchSlop"
+      | "width"
     >,
-    'maxValue' | 'minValue' | 'thumbSize' | 'touchSlop' | 'width'
+    "maxValue" | "minValue" | "thumbSize" | "touchSlop" | "width"
   > {}
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useGestureHandleAndAnimatedStyle({
   initialValue,
   maxValue,
@@ -58,21 +56,21 @@ export function useGestureHandleAndAnimatedStyle({
   width,
 }: UseGestureHandleAndAnimatedStyleArgs) {
   return useMemo(() => {
-    const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0
-    const radius = thumbSize / 2
+    const initialPos = initialValue ? getInitialPosition(initialValue, minValue, maxValue, width) : 0;
+    const radius = thumbSize / 2;
 
-    const translationX = new Value<number>(0)
-    const prevTranslationX = new Value<number>(0)
-    const velocityX = new Value<number>(0)
-    const position = posProps || new Value<number>(initialPos)
-    const state = new Value<GestureState>(GestureState.UNDETERMINED)
+    const translationX = new Value<number>(0);
+    const prevTranslationX = new Value<number>(0);
+    const velocityX = new Value<number>(0);
+    const position = posProps || new Value<number>(initialPos);
+    const state = new Value<GestureState>(GestureState.UNDETERMINED);
 
-    const clock = new Clock()
+    const clock = new Clock();
 
     /**
      * onChange `index`
      */
-    const index = new Value<number>(0)
+    const index = new Value<number>(0);
 
     /**
      * snap
@@ -89,7 +87,7 @@ export function useGestureHandleAndAnimatedStyle({
       springConfig,
       velocityX,
       index,
-    })
+    });
 
     const translateX = block([
       cond(eq(state, GestureState.END), snapBehavior),
@@ -109,12 +107,12 @@ export function useGestureHandleAndAnimatedStyle({
           ]
         : []),
       position,
-    ])
+    ]);
     const pos = interpolate(translateX, {
       inputRange: [0, width],
       outputRange: [0, width],
       extrapolate: Extrapolate.CLAMP,
-    })
+    });
     return {
       translationX,
       state,
@@ -136,7 +134,7 @@ export function useGestureHandleAndAnimatedStyle({
       },
       maxTrackAnimStyle: { width: pos },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
-    }
+    };
   }, [
     initialValue,
     maxValue,
@@ -148,23 +146,18 @@ export function useGestureHandleAndAnimatedStyle({
     thumbSize,
     touchSlop,
     width,
-  ])
+  ]);
 }
 
-function getInitialPosition(
-  value: number,
-  minValue: number,
-  maxValue: number,
-  width: number,
-): number {
-  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width
+function getInitialPosition(value: number, minValue: number, maxValue: number, width: number): number {
+  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width;
 
   /**
    * - development mode: throw error
    * - production mode:  return `0`
    */
-  if (__DEV__) throw new Error('props.value @ Slider must be between `minValue` and `maxValue')
-  return 0
+  if (__DEV__) throw new Error("props.value @ Slider must be between `minValue` and `maxValue");
+  return 0;
 }
 
 /**
@@ -183,12 +176,12 @@ function getBehaviors({
   index,
 }: Pick<
   UseGestureHandleAndAnimatedStyleArgs,
-  'step' | 'onIndexChange' | 'width' | 'maxValue' | 'minValue' | 'springConfig'
+  "step" | "onIndexChange" | "width" | "maxValue" | "minValue" | "springConfig"
 > & {
-  clock: Animated.Clock
-  index: Animated.Value<number>
-  position: Animated.Value<number>
-  velocityX: Animated.Value<number>
+  clock: Animated.Clock;
+  index: Animated.Value<number>;
+  position: Animated.Value<number>;
+  velocityX: Animated.Value<number>;
 }): { crossThresholdBehavior: Animated.Node<number>[]; snapBehavior: Animated.Node<number>[] } {
   if (!step)
     return {
@@ -200,31 +193,28 @@ function getBehaviors({
           ]
         : [],
       crossThresholdBehavior: [],
-    }
+    };
   if (__DEV__ && (maxValue - minValue) % step !== 0)
-    throw new Error(
-      '`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.',
-    )
+    throw new Error("`props.step` @ Slider must satisfy `(maxValue - minValue) % step !==0`, currently.");
 
-  const numberOfPoints = (maxValue - minValue) / step
-  const width_d0 = width / numberOfPoints
+  const numberOfPoints = (maxValue - minValue) / step;
+  const width_d0 = width / numberOfPoints;
   const points = Array(numberOfPoints + 1)
     .fill(0)
-    .map((_, i) => i * width_d0)
-  const interval = (step * width) / (maxValue - minValue)
-  const interval_d2 = interval / 2
+    .map((_, i) => i * width_d0);
+  const interval = (step * width) / (maxValue - minValue);
+  const interval_d2 = interval / 2;
 
-  const crossThresholdBehavior = onIndexChange
+  const crossThresholdBehavior: Animated.Node<number>[] = onIndexChange
     ? [
         points.reduce<Animated.Node<number>>(
-          (pv, cv, i) =>
-            cond(greaterThan(position, cv - interval_d2), cond(neq(index, i), set(index, i)), pv),
-          (0 as unknown) as Animated.Node<number>,
+          (pv, cv, i) => cond(greaterThan(position, cv - interval_d2), cond(neq(index, i), set(index, i)), pv),
+          new Value<number>(0), // 0 as Animated.Adaptable<number>,
         ),
       ]
-    : []
+    : ([] as Animated.Node<number>[]);
 
-  const toValue = new Value<number>(0)
+  const toValue = new Value<number>(0);
 
   return {
     crossThresholdBehavior,
@@ -249,7 +239,7 @@ function getBehaviors({
         time: new Value(0),
       }),
     ],
-  }
+  };
 }
 
 function selectSnapPoint({
@@ -260,15 +250,15 @@ function selectSnapPoint({
   toValue,
   points,
   interval_d2,
-}: Pick<UseGestureHandleAndAnimatedStyleArgs, 'onIndexChange'> & {
-  index: Animated.Value<number>
-  interval_d2: number
-  points: number[]
-  position: Animated.Value<number>
-  toValue: Animated.Value<number>
-  velocityX: Animated.Value<number>
+}: Pick<UseGestureHandleAndAnimatedStyleArgs, "onIndexChange"> & {
+  index: Animated.Value<number>;
+  interval_d2: number;
+  points: number[];
+  position: Animated.Value<number>;
+  toValue: Animated.Value<number>;
+  velocityX: Animated.Value<number>;
 }): Animated.Node<number>[] {
-  const estimate = new Value<number>(0)
+  const estimate = new Value<number>(0);
   return [
     /**
      * velocityX * 0.01
@@ -276,7 +266,7 @@ function selectSnapPoint({
     set(estimate, add(position, multiply(velocityX, 0.01))),
     points.reduce<Animated.Node<number>>(
       (pv, cv, i) =>
-        ((pv as unknown) as 0 | Animated.Node<number>)
+        (pv as unknown as 0 | Animated.Node<number>)
           ? cond(
               greaterThan(estimate, cv - interval_d2),
               [onIndexChange ? cond(neq(index, i), set(index, i)) : 0, set(toValue, cv)],
@@ -287,9 +277,9 @@ function selectSnapPoint({
              * as value of `estimate` might be under `points[0] - interval_d2`.
              */
             block([onIndexChange ? cond(neq(index, i), set(index, i)) : 0, set(toValue, cv)]),
-      (0 as unknown) as Animated.Node<number>,
+      new Value<number>(0),
     ),
     // debug('velocityX', velocityX),
     // debug('estimate', estimate),
-  ]
+  ];
 }

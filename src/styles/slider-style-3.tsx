@@ -1,16 +1,16 @@
-import { StyleSheet } from 'react-native'
-import { SliderStyleProps } from '../types'
-import { colors } from './colors'
+import { StyleSheet } from "react-native";
+import type { SliderStyleProps } from "../types";
+import { colors } from "./colors";
 
 interface GenSliderStyles {
-  color?: string
-  manTrackBorderColor?: string
-  maxTrackColor?: string
-  minTrackColor?: string
-  thumbBorderColor?: string
-  thumbSize?: number
+  color?: string;
+  manTrackBorderColor?: string;
+  maxTrackColor?: string;
+  minTrackColor?: string;
+  thumbBorderColor?: string;
+  thumbSize?: number;
 }
-const borderWidthPerWidth = 1 / 18
+const borderWidthPerWidth = 1 / 18;
 
 export function genSliderStyle3({
   thumbSize = 18,
@@ -20,8 +20,8 @@ export function genSliderStyle3({
   maxTrackColor = colors.orangeLight,
   manTrackBorderColor = colors.orange,
 }: GenSliderStyles = {}): SliderStyleProps {
-  const radius = thumbSize / 2
-  const borderWidth = thumbSize * borderWidthPerWidth
+  const radius = thumbSize / 2;
+  const borderWidth = thumbSize * borderWidthPerWidth;
   const sliderStylesObject = {
     thumbStyle: {
       width: thumbSize,
@@ -44,8 +44,8 @@ export function genSliderStyle3({
       borderWidth: 1,
       borderColor: manTrackBorderColor,
     },
-  }
+  };
 
-  const sliderStyles = StyleSheet.create(sliderStylesObject)
-  return { ...sliderStyles, thumbSize }
+  const sliderStyles = StyleSheet.create(sliderStylesObject);
+  return { ...sliderStyles, thumbSize };
 }

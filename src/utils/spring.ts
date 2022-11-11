@@ -1,6 +1,5 @@
-import Animated from 'react-native-reanimated'
-
-const { cond, block, set, clockRunning, startClock, stopClock, Value, spring } = Animated
+import { cond, block, set, clockRunning, startClock, stopClock, Value, spring } from "react-native-reanimated";
+import type Animated from "react-native-reanimated";
 
 /**
  *
@@ -24,18 +23,18 @@ export function runSpring(
   },
 ): Animated.Node<number> {
   /** create new object, to avoid accidental reuse. */
-  const config: Animated.SpringConfig = { ...baseConfig, toValue }
-  const reset = [set(state.finished, 0), set(state.time, 0), set(state.position, value)]
+  const config: Animated.SpringConfig = { ...baseConfig, toValue };
+  const reset = [set(state.finished, 0), set(state.time, 0), set(state.position, value)];
 
   return block([
     cond(clockRunning(clock), 0, [...reset, startClock(clock)]),
     spring(clock, state, config),
     cond(state.finished, stopClock(clock)),
     state.position,
-  ])
+  ]);
 }
 
-export interface SpringBaseConfig extends Omit<Animated.SpringConfig, 'toValue'> {}
+export interface SpringBaseConfig extends Omit<Animated.SpringConfig, "toValue"> {}
 export const defaultConfig: SpringBaseConfig = {
   /**
    * https://github.com/kmagiera/react-native-reanimated/#springutilsmakedefaultconfig
@@ -56,4 +55,4 @@ export const defaultConfig: SpringBaseConfig = {
   overshootClamping: false,
   restSpeedThreshold: 0.001,
   restDisplacementThreshold: 0.001,
-}
+};

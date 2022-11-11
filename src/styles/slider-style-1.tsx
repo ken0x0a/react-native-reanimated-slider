@@ -1,19 +1,19 @@
-import { StyleSheet } from 'react-native'
-import { SliderStyleProps } from '../types'
-import { colors } from './colors'
+import { StyleSheet } from "react-native";
+import type { SliderStyleProps } from "../types";
+import { colors } from "./colors";
 
 interface GenSliderStyles {
-  borderColor?: string
-  color?: string
-  maxTrackColor?: string
-  minTrackColor?: string
-  thumbBorderWidth?: number
-  thumbSize?: number
-  trackWidth?: number
+  borderColor?: string;
+  color?: string;
+  maxTrackColor?: string;
+  minTrackColor?: string;
+  thumbBorderWidth?: number;
+  thumbSize?: number;
+  trackWidth?: number;
 }
 // 1.5 / 18 => 6.66666666
-const borderWidthPerWidth = 1.5 / 18
-const trackWidthRatio = 6 / 18
+const borderWidthPerWidth = 1.5 / 18;
+const trackWidthRatio = 6 / 18;
 
 export function genSliderStyle1({
   thumbSize = 18,
@@ -25,11 +25,11 @@ export function genSliderStyle1({
   thumbBorderWidth,
   trackWidth: _trackWidth,
 }: GenSliderStyles = {}): SliderStyleProps {
-  const radius = thumbSize / 2
+  const radius = thumbSize / 2;
   const borderWidth =
-    typeof thumbBorderWidth === 'number' ? thumbBorderWidth : thumbSize * borderWidthPerWidth
-  const trackWidth = _trackWidth || trackWidthRatio * thumbSize
-  const trackBorderRadius = trackWidth / 2
+    typeof thumbBorderWidth === "number" ? thumbBorderWidth : thumbSize * borderWidthPerWidth;
+  const trackWidth = _trackWidth || trackWidthRatio * thumbSize;
+  const trackBorderRadius = trackWidth / 2;
 
   const sliderStylesObject = {
     thumbStyle: {
@@ -51,8 +51,8 @@ export function genSliderStyle1({
       height: trackWidth,
       borderRadius: trackBorderRadius,
     },
-  }
+  };
 
-  const sliderStyles = StyleSheet.create(sliderStylesObject)
-  return { ...sliderStyles, thumbSize }
+  const sliderStyles = StyleSheet.create(sliderStylesObject);
+  return { ...sliderStyles, thumbSize };
 }

@@ -1,21 +1,22 @@
-import React from 'react'
-import { StyleSheet, View, ViewProps } from 'react-native'
-import { SliderProps } from '../types'
-import { colors } from './colors'
+import React from "react";
+import type { ViewProps } from "react-native";
+import { StyleSheet, View } from "react-native";
+import type { SliderProps } from "../types";
+import { colors } from "./colors";
 
 interface GenSliderStyles {
-  color?: string
-  maxTrackColor?: string
-  minTrackColor?: string
-  thumbBorderColor?: string
-  thumbInnerSize?: number
-  thumbSize?: number
-  trackWidth?: number
+  color?: string;
+  maxTrackColor?: string;
+  minTrackColor?: string;
+  thumbBorderColor?: string;
+  thumbInnerSize?: number;
+  thumbSize?: number;
+  trackWidth?: number;
 }
 
-const borderWidthPerWidth = 1 / 18
-const trackWidthRatio = 4 / 18
-const thumbInnerSizeRatio = 4 / 18
+const borderWidthPerWidth = 1 / 18;
+const trackWidthRatio = 4 / 18;
+const thumbInnerSizeRatio = 4 / 18;
 
 export function genSliderStyle4({
   thumbSize = 18,
@@ -26,12 +27,12 @@ export function genSliderStyle4({
   thumbInnerSize: _thumbInnerSize,
   trackWidth: _trackWidth,
 }: GenSliderStyles = {}): SliderProps {
-  const radius = thumbSize / 2
-  const thumbInnerSize = _thumbInnerSize || thumbInnerSizeRatio * thumbSize
-  const innerRadius = thumbInnerSize / 2
-  const borderWidth = thumbSize * borderWidthPerWidth
-  const trackWidth = _trackWidth || trackWidthRatio * thumbSize
-  const trackBorderRadius = trackWidth / 2
+  const radius = thumbSize / 2;
+  const thumbInnerSize = _thumbInnerSize || thumbInnerSizeRatio * thumbSize;
+  const innerRadius = thumbInnerSize / 2;
+  const borderWidth = thumbSize * borderWidthPerWidth;
+  const trackWidth = _trackWidth || trackWidthRatio * thumbSize;
+  const trackBorderRadius = trackWidth / 2;
 
   const sliderStylesObject = {
     thumbStyle: {
@@ -41,8 +42,8 @@ export function genSliderStyle4({
       backgroundColor,
       borderColor: thumbBorderColor,
       borderWidth,
-      justifyContent: 'center' as 'center',
-      alignItems: 'center' as 'center',
+      justifyContent: "center" as const,
+      alignItems: "center" as const,
     },
     minTrackStyle: {
       backgroundColor: minTrackColor,
@@ -60,13 +61,15 @@ export function genSliderStyle4({
       height: thumbInnerSize,
       borderRadius: innerRadius,
     },
-  }
+  };
 
-  const { thumbInner, ...sliderStyles } = StyleSheet.create(sliderStylesObject)
-  const ThumbComponent: React.FC<ViewProps> = (props) => (
-    <View {...props}>
-      <View style={thumbInner} />
-    </View>
-  )
-  return { ...sliderStyles, ThumbComponent, thumbSize }
+  const { thumbInner, ...sliderStyles } = StyleSheet.create(sliderStylesObject);
+  function ThumbComponent(props: ViewProps) {
+    return (
+      <View {...props}>
+        <View style={thumbInner} />
+      </View>
+    );
+  }
+  return { ...sliderStyles, ThumbComponent, thumbSize };
 }
