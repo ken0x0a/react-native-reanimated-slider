@@ -1,8 +1,8 @@
-import React from 'react'
-import { StyleProp, ViewStyle } from 'react-native'
-import { PanGestureHandler, PanGestureHandlerProperties } from 'react-native-gesture-handler'
-import Animated from 'react-native-reanimated'
-import { SpringBaseConfig } from './utils/spring'
+import type {ComponentType, RefObject} from 'react'
+import type { StyleProp, ViewStyle } from 'react-native'
+import type { PanGestureHandler, PanGestureHandlerProperties } from 'react-native-gesture-handler'
+import type Animated from 'react-native-reanimated'
+import type { SpringBaseConfig } from './utils/spring'
 
 export type SliderStyleProps = {
   maxTrackStyle?: StyleProp<ViewStyle>
@@ -31,11 +31,11 @@ export type SliderProps = SliderStyleProps &
     maxValue?: number
     minValue?: number
     onIndexChange?: (value: number) => void
-    panRef?: React.RefObject<PanGestureHandler>
+    panRef?: RefObject<PanGestureHandler>
     position?: Animated.Value<number>
     springConfig?: SpringBaseConfig
     step?: number
-    ThumbComponent?: React.ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    ThumbComponent?: ComponentType<any> // eslint-disable-line @typescript-eslint/no-explicit-any
     /**
      * Controls touchable area.
      * bigger value & larger touch area

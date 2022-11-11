@@ -1,6 +1,6 @@
-import Animated from 'react-native-reanimated'
+import { cond, block, set, clockRunning, startClock, stopClock, Value, spring } from 'react-native-reanimated'
+import type Animated from 'react-native-reanimated'
 
-const { cond, block, set, clockRunning, startClock, stopClock, Value, spring } = Animated
 
 /**
  *

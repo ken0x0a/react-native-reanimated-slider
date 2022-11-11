@@ -1,6 +1,6 @@
 import React from 'react'
 import { StyleSheet, View, ViewProps } from 'react-native'
-import { SliderProps } from '../types'
+import type { SliderProps } from '../types'
 import { colors } from './colors'
 
 interface GenSliderStyles {
