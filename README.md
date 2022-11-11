@@ -1,5 +1,5 @@
-[![CircleCI](https://circleci.com/gh/ken0x0a/react-native-reanimated-slider/tree/master.svg?style=svg)](https://circleci.com/gh/ken0x0a/react-native-reanimated-slider/tree/master)
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
+[![GitHub Action](https://github.com/ken0x0a/react-native-reanimated-slider/actions/workflows/publish.yml/badge.svg)](https://github.com/ken0x0a/react-native-reanimated-slider/actions)
+[![npm version](https://img.shields.io/npm/v/react-native-re-slider?color=%234FC73C)](https://www.npmjs.com/package/react-native-re-slider)
 
 ---
 
