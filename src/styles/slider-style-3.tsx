@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
-import type { SliderStyleProps } from "../types";
 import { colors } from "./colors";
+import type { SliderStyleProps } from "../types";
 
 interface GenSliderStyles {
   color?: string;

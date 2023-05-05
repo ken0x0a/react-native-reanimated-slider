@@ -21,8 +21,8 @@ import {
   Value,
   Extrapolate,
 } from "react-native-reanimated";
-import type { SliderProps } from "../types";
 import { runSpring } from "./spring";
+import type { SliderProps } from "../types";
 
 type PartRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<Pick<T, K>>;
 interface UseGestureHandleAndAnimatedStyleArgs
