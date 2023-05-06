@@ -1,3 +1,10 @@
+## [3.0.2](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v3.0.1...v3.0.2) (2023-05-06)
+
+
+### Bug Fixes
+
+* slider unresponsible & initial position ([#12](https://github.com/ken0x0a/react-native-reanimated-slider/issues/12)) ([69ad16f](https://github.com/ken0x0a/react-native-reanimated-slider/commit/69ad16f10f7644b3484da50f96de0ce60f856cb0))
+
 ## [3.0.1](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v3.0.0...v3.0.1) (2023-05-06)
 
 
