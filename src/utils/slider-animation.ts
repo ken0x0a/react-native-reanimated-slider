@@ -135,8 +135,10 @@ export function useGestureHandleAndAnimatedStyle({
       maxTrackAnimStyle: { width: pos },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     };
+    // `initialValue` is "initial" value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    initialValue,
+    // initialValue,
     maxValue,
     minValue,
     onIndexChange,
@@ -150,7 +152,7 @@ export function useGestureHandleAndAnimatedStyle({
 }
 
 function getInitialPosition(value: number, minValue: number, maxValue: number, width: number): number {
-  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width;
+  if (minValue <= value && value <= maxValue) return ((value - minValue) / (maxValue - minValue)) * width;
 
   /**
    * - development mode: throw error
