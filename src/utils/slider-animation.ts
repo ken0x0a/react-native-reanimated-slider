@@ -135,6 +135,8 @@ export function useGestureHandleAndAnimatedStyle({
       maxTrackAnimStyle: { width: pos },
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     };
+    // `initialValue` is "initial" value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     // initialValue,
     maxValue,
