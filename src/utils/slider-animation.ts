@@ -136,7 +136,7 @@ export function useGestureHandleAndAnimatedStyle({
       // maxTrackAnimStyle: { left: 0, right: translateX as any, position: 'absolute' as 'absolute' },
     };
   }, [
-    initialValue,
+    // initialValue,
     maxValue,
     minValue,
     onIndexChange,
