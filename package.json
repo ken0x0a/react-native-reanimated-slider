@@ -7,8 +7,11 @@
   "react-native": "src/index.ts",
   "types": "lib/typescript/index.d.ts",
   "files": [
-    "lib/",
-    "src/"
+    "src",
+    "lib",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
   ],
   "repository": {
     "type": "git",
@@ -23,7 +26,7 @@
     "type-check": "tsc --noEmit",
     "type-check-ci": "tsc --incremental --outDir './build'",
     "test": "yarn run type-check && yarn run lint",
-    "prepare": "bob build",
+    "prepack": "bob build",
     "tsw": "tsc --noEmit --watch",
     "semantic-release": "semantic-release",
     "commit": "git-cz",
@@ -45,7 +48,7 @@
     "@types/react": "^18.0.25",
     "react": "18.2.0",
     "react-native": "0.71.7",
-    "react-native-builder-bob": "0.20.4",
+    "react-native-builder-bob": "^0.20.4",
     "react-native-gesture-handler": "^2.8.0",
     "react-native-reanimated": "^2.12.0",
     "semantic-release": "^19.0.5",
@@ -72,5 +75,9 @@
       "defaultBody": "",
       "defaultIssues": ""
     }
-  }
+  },
+  "eslintIgnore": [
+    "node_modules/",
+    "lib/"
+  ]
 }
