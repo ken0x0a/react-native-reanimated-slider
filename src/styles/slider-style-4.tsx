@@ -1,8 +1,8 @@
 import React from "react";
 import type { ViewProps } from "react-native";
 import { StyleSheet, View } from "react-native";
-import type { SliderProps } from "../types";
 import { colors } from "./colors";
+import type { SliderProps } from "../types";
 
 interface GenSliderStyles {
   color?: string;
