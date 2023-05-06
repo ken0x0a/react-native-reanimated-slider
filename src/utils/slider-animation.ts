@@ -150,7 +150,7 @@ export function useGestureHandleAndAnimatedStyle({
 }
 
 function getInitialPosition(value: number, minValue: number, maxValue: number, width: number): number {
-  if (minValue <= value && value <= maxValue) return (value / (maxValue - minValue)) * width;
+  if (minValue <= value && value <= maxValue) return ((value - minValue) / (maxValue - minValue)) * width;
 
   /**
    * - development mode: throw error
