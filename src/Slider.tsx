@@ -44,7 +44,9 @@ export function Slider({
   const radius = thumbSize / 2;
 
   const isPressed = useSharedValue(false);
-  const translateX = useSharedValue(initialValue === undefined ? 0 : initialValue / (maxValue - minValue));
+  const translateX = useSharedValue(
+    initialValue === undefined ? 0 : ((initialValue - minValue) / (maxValue - minValue)) * width,
+  );
   const thumbAnimStyle = useAnimatedStyle(
     () => ({
       transform: [{ translateX: translateX.value }],
