@@ -19,7 +19,7 @@ export type SliderProps = SliderStyleProps & {
   // springConfig?: SpringBaseConfig;
   springConfig?: WithSpringConfig;
   step?: number;
-  ThumbComponent?: ComponentType<Pick<ViewProps, "style">>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  ThumbComponent?: ComponentType<Pick<ViewProps, "style">>;
   /**
    * Controls touchable area.
    * bigger value & larger touch area
