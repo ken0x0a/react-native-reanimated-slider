@@ -35,9 +35,7 @@ export function Slider({
   thumbStyle = styles.thumb,
   touchSlop = 10,
   width = DEFAULT_SLIDER_WIDTH,
-  //
   springConfig,
-  // ...panGestureProps
   activeOffsetX = [-5, 5],
 }: SliderProps) {
   // console.debug("Slider rendered ✅");
@@ -78,23 +76,15 @@ export function Slider({
     .onEnd((e) => {
       // select snap point
       if (step !== undefined) {
-        // const numSteps = step ? (maxValue - minValue) / step + 1 : 0;
         const numSteps = (maxValue - minValue) / step;
         const interval = width / numSteps;
-        // const interval_d2 = interval / 2; // used to determine where to snap to
 
         /**
-         * velocityX * 0.01
+         * velocityX * 0.03 makes feel more natural?
          */
         const estimate = translateX.value + e.velocityX * 0.03;
-        // console.debug("estimate", estimate);
-        // console.debug("e.velocityX", e.velocityX);
-        // console.debug("numSteps", numSteps);
-
-        // const toValue = Math.round(estimate / interval_d2) / 2
         const toIndex = clamp(Math.round(estimate / interval), 0, numSteps);
         const toValue = toIndex * interval;
-        // console.debug("toValue", toValue);
         if (onIndexChange) {
           onIndexChange(minValue + toIndex * step);
         }
