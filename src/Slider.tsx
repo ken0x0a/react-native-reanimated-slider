@@ -1,7 +1,7 @@
 import React from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { colors } from "./styles/colors";
 import type { SliderProps } from "./types";
 
@@ -86,7 +86,9 @@ export function Slider({
         const toIndex = clamp(Math.round(estimate / interval), 0, numSteps);
         const toValue = toIndex * interval;
         if (onIndexChange) {
+          runOnJS(onIndexChange)(minValue + toIndex * step);
           onIndexChange(minValue + toIndex * step);
+          runOnJS(onIndexChange)(minValue + toIndex * step);
         }
 
         translateX.value = withSpring(
@@ -102,7 +104,9 @@ export function Slider({
       } else {
         start.value = translateX.value;
         if (onIndexChange) {
+          runOnJS(onIndexChange)(minValue + translateX.value / (maxValue - minValue));
           onIndexChange(minValue + translateX.value / (maxValue - minValue));
+          runOnJS(onIndexChange)(minValue + translateX.value / (maxValue - minValue));
         }
         // translateX.value = withDecay({ deceleration: 0.97, velocity: e.velocityX, clamp: [0, width] }, () => {
         //   start.value = translateX.value;
