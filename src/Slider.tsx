@@ -61,7 +61,7 @@ export function Slider({
     [],
   );
 
-  const start = useSharedValue(0);
+  const start = useSharedValue(translateX.value);
   const gesture = Gesture.Pan()
     .hitSlop(touchSlop)
     .maxPointers(1)
