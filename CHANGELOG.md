@@ -1,3 +1,10 @@
+## [4.0.2](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v4.0.1...v4.0.2) (2023-06-23)
+
+
+### Bug Fixes
+
+* crash on `onIndexChange` as callback is non `worklet` fn ([#15](https://github.com/ken0x0a/react-native-reanimated-slider/issues/15)) ([d4504da](https://github.com/ken0x0a/react-native-reanimated-slider/commit/d4504dab63680bee869d98f54993228dc342eada))
+
 ## [4.0.1](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v4.0.0...v4.0.1) (2023-06-23)
 
 
