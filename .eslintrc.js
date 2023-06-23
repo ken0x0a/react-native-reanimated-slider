@@ -3,6 +3,7 @@ module.exports = {
   rules: {
     camelcase: 0,
     "@typescript-eslint/naming-convention": 0,
+    curly: [2, "all"],
   },
   overrides: [
     {

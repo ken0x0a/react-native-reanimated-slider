@@ -1,10 +1,9 @@
 import React from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
-import { PanGestureHandler } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { colors } from "./styles/colors";
 import type { SliderProps } from "./types";
-import { useGestureHandleAndAnimatedStyle } from "./utils/slider-animation";
 
 const DEFAULT_THUMB_SIZE = 27;
 const DEFAULT_THUMB_BORDER_WIDTH = 2.25;
@@ -15,13 +14,18 @@ const windowWidth = Dimensions.get("window").width;
 const DEFAULT_SLIDER_HORIZONTAL_MARGIN = 20;
 const DEFAULT_SLIDER_WIDTH = windowWidth - DEFAULT_SLIDER_HORIZONTAL_MARGIN * 2;
 
+function clamp(value: number, min: number, max: number) {
+  "worklet";
+
+  return Math.min(Math.max(value, min), max);
+}
+
 export function Slider({
   initialValue,
   minValue = 0,
   maxValue = 10,
   step,
   onIndexChange,
-  position: posProps,
   ThumbComponent = View,
   // Styles
   maxTrackStyle = styles.maxTrack,
@@ -33,22 +37,89 @@ export function Slider({
   width = DEFAULT_SLIDER_WIDTH,
   //
   springConfig,
-  panRef,
+  // ...panGestureProps
   activeOffsetX = [-5, 5],
-  ...panGestureProps
 }: SliderProps) {
-  const { handleGestureEvent, thumbAnimStyle, maxTrackAnimStyle } = useGestureHandleAndAnimatedStyle({
-    initialValue,
-    maxValue,
-    minValue,
-    onIndexChange,
-    thumbSize,
-    position: posProps,
-    springConfig,
-    step,
-    touchSlop,
-    width,
-  });
+  // console.debug("Slider rendered ✅");
+  const radius = thumbSize / 2;
+
+  const isPressed = useSharedValue(false);
+  const translateX = useSharedValue(initialValue === undefined ? 0 : initialValue / (maxValue - minValue));
+  const thumbAnimStyle = useAnimatedStyle(
+    () => ({
+      transform: [{ translateX: translateX.value }],
+      ...(touchSlop && { margin: -touchSlop, padding: touchSlop }),
+      borderRadius: radius,
+      left: -radius,
+    }),
+    [radius],
+  );
+  const maxTrackAnimStyle = useAnimatedStyle(
+    () => ({
+      width: translateX.value,
+    }),
+    [],
+  );
+
+  const start = useSharedValue(0);
+  const gesture = Gesture.Pan()
+    .hitSlop(touchSlop)
+    .maxPointers(1)
+    .minPointers(1)
+    .activeOffsetX(activeOffsetX)
+    .onBegin(() => {
+      isPressed.value = true;
+    })
+    .onUpdate((e) => {
+      translateX.value = e.translationX + start.value;
+    })
+    .onEnd((e) => {
+      // select snap point
+      if (step !== undefined) {
+        // const numSteps = step ? (maxValue - minValue) / step + 1 : 0;
+        const numSteps = (maxValue - minValue) / step;
+        const interval = width / numSteps;
+        // const interval_d2 = interval / 2; // used to determine where to snap to
+
+        /**
+         * velocityX * 0.01
+         */
+        const estimate = translateX.value + e.velocityX * 0.03;
+        // console.debug("estimate", estimate);
+        // console.debug("e.velocityX", e.velocityX);
+        // console.debug("numSteps", numSteps);
+
+        // const toValue = Math.round(estimate / interval_d2) / 2
+        const toIndex = clamp(Math.round(estimate / interval), 0, numSteps);
+        const toValue = toIndex * interval;
+        // console.debug("toValue", toValue);
+        if (onIndexChange) {
+          onIndexChange(minValue + toIndex * step);
+        }
+
+        translateX.value = withSpring(
+          toValue,
+          {
+            ...springConfig,
+            velocity: e.velocityX,
+          },
+          () => {
+            start.value = toValue;
+          },
+        );
+      } else {
+        start.value = translateX.value;
+        if (onIndexChange) {
+          onIndexChange(minValue + translateX.value / (maxValue - minValue));
+        }
+        // translateX.value = withDecay({ deceleration: 0.97, velocity: e.velocityX, clamp: [0, width] }, () => {
+        //   start.value = translateX.value;
+        // });
+      }
+    })
+    .onFinalize(() => {
+      isPressed.value = false;
+    });
 
   return (
     <View style={[styles.container, { height: thumbSize, width: width || windowWidth - thumbSize }]}>
@@ -59,20 +130,11 @@ export function Slider({
         <Animated.View style={[maxTrackStyle, maxTrackAnimStyle]} />
       </View>
       <View style={styles.absoluteFillCenterStart} pointerEvents="box-none">
-        <PanGestureHandler
-          {...panGestureProps}
-          ref={panRef}
-          maxPointers={1}
-          minPointers={1}
-          activeOffsetX={activeOffsetX}
-          onHandlerStateChange={handleGestureEvent}
-          onGestureEvent={handleGestureEvent}
-          // hitSlop={hitSlop}
-        >
+        <GestureDetector gesture={gesture}>
           <Animated.View style={[thumbBoxStyle, thumbAnimStyle]}>
             <ThumbComponent style={thumbStyle} />
           </Animated.View>
-        </PanGestureHandler>
+        </GestureDetector>
       </View>
     </View>
   );
