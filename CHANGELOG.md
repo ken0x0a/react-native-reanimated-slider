@@ -1,3 +1,23 @@
+# [4.0.0](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v3.0.2...v4.0.0) (2023-06-23)
+
+
+### Features
+
+* enable v3 (replace v1 syntax) ([#13](https://github.com/ken0x0a/react-native-reanimated-slider/issues/13)) ([1fdc0f5](https://github.com/ken0x0a/react-native-reanimated-slider/commit/1fdc0f56e627940382dc27420557a29ddb066823))
+
+
+### BREAKING CHANGES
+
+* not work with v1 anymore
+
+* chore: enable eslint rule curly "all"
+
+* chore(ci): remove yarn.lock for monorepo dev
+
+* chore: fix type error
+
+* chore: fix lint error
+
 ## [3.0.2](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v3.0.1...v3.0.2) (2023-05-06)
 
 
