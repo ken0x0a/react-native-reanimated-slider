@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v4.0.0...v4.0.1) (2023-06-23)
+
+
+### Bug Fixes
+
+* initial value ([#14](https://github.com/ken0x0a/react-native-reanimated-slider/issues/14)) ([84c7b21](https://github.com/ken0x0a/react-native-reanimated-slider/commit/84c7b2119ac0a978df068dc32f6c8d2fa3fccacd))
+
 # [4.0.0](https://github.com/ken0x0a/react-native-reanimated-slider/compare/v3.0.2...v4.0.0) (2023-06-23)
 
 

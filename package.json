@@ -1,6 +1,6 @@
 {
   "name": "react-native-re-slider",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Slider component for react-native using reanimated",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
